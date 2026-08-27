@@ -257,7 +257,7 @@ export const AdminGuideModal: React.FC<AdminGuideModalProps> = ({ isOpen, onClos
                     <p>💰 <strong>Montant Verrouillé :</strong> 11 000 FCFA</p>
                     <p>⏱️ <strong>Délai (Coché) :</strong> Express Journée (&lt; 12 Heures)</p>
                     <p>📎 <strong>Fichiers exemplaires joints :</strong> manuscrit_chapitre1.docx, modele_mise_en_page.pdf</p>
-                    <p>🔒 <strong>Lien Wave avec montant instancié :</strong> https://wave.com/b/B_s5iX75b-0zQ?amount=11000</p>
+                    <p>🔒 <strong>Lien Wave avec montant instancié :</strong> {CONTACT_INFO.wavePaymentUrl}?amount=11000&currency=XOF</p>
                     <p className="text-slate-500 pt-1">"Le client clique sur le lien Wave où 11 000 F est déjà pré-rempli sans risque d'erreur !"</p>
                   </div>
                 </div>
@@ -377,7 +377,7 @@ export const AdminGuideModal: React.FC<AdminGuideModalProps> = ({ isOpen, onClos
                   Étape 2 : Récupérer ses fichiers & valider le paiement Wave
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Demandez-lui de vous envoyer son ancien CV, son texte Word/PDF ou ses photos. S'il n'a pas encore payé, renvoyez-lui votre lien Wave direct : <code>https://wave.com/b/B_s5iX75b-0zQ</code>.
+                  Demandez-lui de vous envoyer son ancien CV, son texte Word/PDF ou ses photos. S'il n'a pas encore payé, renvoyez-lui votre lien Wave direct : <code>{CONTACT_INFO.wavePaymentUrl}</code>.
                 </p>
               </div>
 
