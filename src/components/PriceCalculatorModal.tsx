@@ -61,7 +61,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
       <div 
-        className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -91,7 +91,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
           
           {/* Step 1: Select Service */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
               1. Choisissez la prestation
             </label>
             <select
@@ -100,10 +100,10 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
                 setSelectedServiceId(e.target.value);
                 setQuantity(e.target.value === 'saisie-texte' ? 55 : 3);
               }}
-              className="w-full p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+              className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
             >
               {SERVICES_DATA.map((s) => (
-                <option key={s.id} value={s.id}>
+                <option key={s.id} value={s.id} className="dark:bg-slate-800">
                   {s.name} — Tarif de base : {s.priceDisplay}
                 </option>
               ))}
@@ -111,9 +111,9 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
           </div>
 
           {/* Step 2: Quantity slider & Presets */}
-          <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div className="space-y-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 2. Définissez la quantité ({selectedService.unitLabel})
               </label>
               <div className="flex items-center space-x-2">
@@ -123,9 +123,9 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
                   max="500"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-20 px-3 py-1 bg-white border border-slate-300 rounded-lg text-center font-extrabold text-blue-900 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  className="w-20 px-3 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-center font-extrabold text-blue-900 dark:text-blue-400 text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none"
                 />
-                <span className="text-xs font-medium text-slate-600">{selectedService.unitLabel}</span>
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{selectedService.unitLabel}</span>
               </div>
             </div>
 
@@ -136,7 +136,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
               max={selectedService.category === 'bureautique' ? 150 : 30}
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-700"
+              className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-700 dark:accent-blue-500"
             />
 
             {/* Quick preset buttons */}
@@ -149,8 +149,8 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
                   onClick={() => setQuantity(preset)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
                     quantity === preset
-                      ? 'bg-blue-900 text-white'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      ? 'bg-blue-900 dark:bg-blue-600 text-white'
+                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   {preset} {selectedService.unitLabel.includes('page') ? 'p.' : ''}
@@ -161,7 +161,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
 
           {/* Live Calculation Display Box */}
           <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 text-white shadow-lg space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-blue-800/80">
+            <div className="flex items-center justify-between pb-3 border-blue-800/80 border-b">
               <div className="flex items-center space-x-2 text-xs font-semibold text-amber-400">
                 <Sparkles className="w-4 h-4" />
                 <span>Résultat du devis instantané</span>
@@ -214,7 +214,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           
           <button
             onClick={handleAddAndClose}

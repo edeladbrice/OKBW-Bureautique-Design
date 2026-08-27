@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%" fill="none">
+  <!-- Outer Circle -->
+  <circle cx="250" cy="250" r="238" stroke="#0A2540" stroke-width="9" fill="#FFFFFF" />
+
+  <!-- Main Symbol Group -->
+  <g transform="translate(130, 110)">
+    
+    <!-- Gear Element (Left) -->
+    <g transform="translate(55, 65)">
+      <!-- Outer Gear Teeth -->
+      <path d="M-12 -65 L12 -65 L10 -48 A52 52 0 0 1 34 -38 L50 -50 L65 -35 L53 -19 A52 52 0 0 1 58 10 L75 12 L75 38 L58 40 A52 52 0 0 1 34 68 L49 84 L34 99 L19 87 A52 52 0 0 1 -10 92 L-12 109 L-38 109 L-40 92 A52 52 0 0 1 -68 68 L-84 83 L-99 68 L-87 53 A52 52 0 0 1 -92 24 L-109 22 L-109 -4 L-92 -6 A52 52 0 0 1 -68 -34 L-83 -50 L-68 -65 L-53 -53 A52 52 0 0 1 -24 -58 L-22 -75 Z" fill="#0A2540" />
+      
+      <!-- Inner Gear Aperture Ring -->
+      <circle cx="-15" cy="18" r="42" fill="#FFFFFF" />
+      <circle cx="-15" cy="18" r="39" stroke="#0A2540" stroke-width="4" fill="#0A2540" />
+      
+      <!-- Camera Aperture Blades inside Gear -->
+      <g transform="translate(-15, 18)">
+        <path d="M0 -36 L22 -10 L12 0 L-10 -20 Z" fill="#0A2540" />
+        <path d="M28 -12 L30 18 L15 15 L12 -6 Z" fill="#0A2540" />
+        <path d="M25 18 L-2 34 L-4 18 L16 8 Z" fill="#0A2540" />
+        <path d="M-8 32 L-34 12 L-20 6 L-2 20 Z" fill="#0A2540" />
+        <path d="M-33 8 L-24 -24 L-12 -12 L-18 6 Z" fill="#0A2540" />
+        <path d="M-18 -25 L12 -33 L8 -18 L-8 -15 Z" fill="#0A2540" />
+
+        <!-- Aperture Iris Center Eye (Orange) -->
+        <circle cx="0" cy="0" r="23" fill="#FF5E14" />
+        <circle cx="0" cy="0" r="23" fill="url(#orangeGlow)" />
+        <circle cx="-5" cy="-5" r="7" fill="#FFFFFF" opacity="0.85" />
+        <circle cx="4" cy="4" r="3" fill="#FFFFFF" opacity="0.6" />
+      </g>
+    </g>
+
+    <!-- Document / 'B' Monogram (Right) -->
+    <g transform="translate(138, 2)">
+      <!-- Main 'B' Body & Folded Top Corner Sheet -->
+      <path d="M 0 0 
+               L 42 0 
+               L 72 32 
+               L 72 48 
+               C 88 52, 98 66, 98 84 
+               C 98 100, 86 112, 70 116 
+               C 90 120, 102 136, 102 156 
+               C 102 180, 84 198, 56 198 
+               L 0 198 
+               Z" 
+            fill="#0A2540" />
+      
+      <!-- Inner cutout for top of 'B' -->
+      <path d="M 18 20 
+               L 40 20 
+               L 60 42 
+               C 68 50, 74 62, 74 76 
+               C 74 92, 60 102, 42 102 
+               L 18 102 
+               Z" 
+            fill="#FFFFFF" />
+
+      <!-- Inner cutout for bottom of 'B' -->
+      <path d="M 18 118 
+               L 46 118 
+               C 66 118, 78 130, 78 152 
+               C 78 172, 64 180, 44 180 
+               L 18 180 
+               Z" 
+            fill="#FFFFFF" />
+
+      <!-- Folded Dog-Ear Corner at Top Right of Document -->
+      <path d="M 42 0 L 72 32 L 42 32 Z" fill="#FFFFFF" />
+      <path d="M 42 0 L 42 32 L 72 32" stroke="#0A2540" stroke-width="4.5" stroke-linejoin="round" fill="#FFFFFF" />
+    </g>
+
+  </g>
+
+  <!-- Typography: Okbw -->
+  <text x="250" y="375" 
+        text-anchor="middle" 
+        font-family="'Plus Jakarta Sans', 'Outfit', 'Arial Rounded MT Bold', sans-serif" 
+        font-size="88" 
+        font-weight="900" 
+        letter-spacing="-1.5" 
+        fill="#0A2540">
+    Okbw
+  </text>
+
+  <!-- Horizontal Separator Bar -->
+  <line x1="95" y1="400" x2="405" y2="400" stroke="#0A2540" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Subtitle: BUREAUTIQUE ET DESIGN -->
+  <text x="250" y="432" 
+        text-anchor="middle" 
+        font-family="'Plus Jakarta Sans', 'Outfit', sans-serif" 
+        font-size="20.5" 
+        font-weight="700" 
+        letter-spacing="5" 
+        fill="#0A2540">
+    BUREAUTIQUE ET DESIGN
+  </text>
+
+  <!-- Defs / Gradients -->
+  <defs>
+    <radialGradient id="orangeGlow" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFA24C" />
+      <stop offset="60%" stop-color="#FF5E14" />
+      <stop offset="100%" stop-color="#D94000" />
+    </radialGradient>
+  </defs>
+</svg>

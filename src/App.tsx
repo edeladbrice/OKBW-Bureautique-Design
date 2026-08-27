@@ -11,10 +11,21 @@ import { TestimonialsSection } from './components/TestimonialsSection';
 import { CartDrawer } from './components/CartDrawer';
 import { FloatingContact } from './components/FloatingContact';
 import { Footer } from './components/Footer';
+import { AdminGuideModal } from './components/AdminGuideModal';
 import { CartItem, ServiceItem } from './types';
 import { calculateServicePrice } from './utils/pricing';
 
 export default function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const savedTheme = localStorage.getItem('okbw_theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem('okbw_cart');
@@ -26,7 +37,37 @@ export default function App() {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isAdminGuideOpen, setIsAdminGuideOpen] = useState(false);
   const [selectedServiceForModal, setSelectedServiceForModal] = useState<ServiceItem | null>(null);
+
+  // Sync theme class to html element
+  useEffect(() => {
+    try {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem('okbw_theme', theme);
+    } catch {
+      // ignore
+    }
+  }, [theme]);
+
+  // Visitor counter increment
+  useEffect(() => {
+    try {
+      const storedVisits = localStorage.getItem('okbw_stat_visits');
+      const current = storedVisits ? parseInt(storedVisits, 10) + 1 : 143;
+      localStorage.setItem('okbw_stat_visits', current.toString());
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // Save cart to local storage
   useEffect(() => {
@@ -116,21 +157,25 @@ export default function App() {
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen flex flex-col bg-[#F4F7F9] dark:bg-[#0B1320] text-slate-900 dark:text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
       
-      {/* Sticky Header Navigation */}
+      {/* Sticky Header Navigation with Theme Switcher & Admin Guide */}
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
       />
 
       {/* Main Content Sections */}
       <main className="flex-grow">
-        {/* Hero Section with Slogan & Action Hub */}
+        {/* Hero Section with Official Logo, Slogan & Action Hub */}
         <Hero
           onOpenCalculator={() => setIsCalculatorOpen(true)}
           onExploreServices={scrollToCatalog}
+          onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
         />
 
         {/* E-commerce Services Catalog & Ordering */}
@@ -158,7 +203,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer onOpenAdminGuide={() => setIsAdminGuideOpen(true)} />
 
       {/* Modals and Slide-Overs */}
       
@@ -187,12 +232,20 @@ export default function App() {
         onExploreCatalog={scrollToCatalog}
       />
 
-      {/* Floating WhatsApp and Cart buttons */}
+      {/* Owner / Admin Guide & Live Activity Monitor Modal */}
+      <AdminGuideModal
+        isOpen={isAdminGuideOpen}
+        onClose={() => setIsAdminGuideOpen(false)}
+      />
+
+      {/* Floating WhatsApp, Cart and Quick Guide buttons */}
       <FloatingContact
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
+        onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
       />
 
     </div>
   );
 }
+

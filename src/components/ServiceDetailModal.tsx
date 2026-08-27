@@ -61,7 +61,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div 
-        className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Banner */}
@@ -109,21 +109,21 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           {/* Description */}
           <div className="space-y-2">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description de la prestation</h4>
-            <p className="text-sm text-slate-700 leading-relaxed">{service.description}</p>
+            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{service.description}</p>
           </div>
 
           {/* Special Promo or Tier Rule if any */}
           {(service.promoNote || ruleApplied || service.volumeRulesDescription) && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/90 text-amber-950 space-y-1.5">
-              <div className="flex items-center space-x-2 font-bold text-xs text-amber-900">
-                <Zap className="w-4 h-4 text-amber-600" />
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-900/60 text-amber-950 dark:text-amber-200 space-y-1.5">
+              <div className="flex items-center space-x-2 font-bold text-xs text-amber-900 dark:text-amber-300">
+                <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 <span>Règle Tarifaire & Économies Dégressives</span>
               </div>
-              <p className="text-xs font-medium text-amber-800">
+              <p className="text-xs font-medium text-amber-800 dark:text-amber-300/90">
                 {service.volumeRulesDescription || service.promoNote}
               </p>
               {ruleApplied && (
-                <div className="inline-block mt-1 px-2 py-0.5 rounded bg-amber-200/70 text-amber-950 text-[11px] font-bold">
+                <div className="inline-block mt-1 px-2 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 text-[11px] font-bold">
                   Appliqué actuellement : {ruleApplied}
                 </div>
               )}
@@ -135,8 +135,8 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ce qui est inclus dans votre commande</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {service.inclusions.map((inc, i) => (
-                <div key={i} className="flex items-start space-x-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700">
-                  <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div key={i} className="flex items-start space-x-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300">
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span>{inc}</span>
                 </div>
               ))}
@@ -144,21 +144,21 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           </div>
 
           {/* Quantity selector & Live Price calculation */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-bold text-slate-700 block">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200 block">
                 Quantité souhaitée ({service.unitLabel})
               </span>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 Le tarif dégressif s'applique automatiquement
               </span>
             </div>
 
-            <div className="flex items-center space-x-3 bg-white px-3 py-1.5 rounded-xl border border-slate-300 shadow-inner">
+            <div className="flex items-center space-x-3 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 shadow-inner">
               <button
                 type="button"
                 onClick={handleDecrement}
-                className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold flex items-center justify-center transition-colors"
                 aria-label="Diminuer la quantité"
               >
                 <Minus className="w-4 h-4" />
@@ -170,13 +170,13 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                 max="500"
                 value={quantity}
                 onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-16 text-center font-black text-slate-900 text-base focus:outline-none"
+                className="w-16 text-center font-black text-slate-900 dark:text-white bg-transparent text-base focus:outline-none"
               />
 
               <button
                 type="button"
                 onClick={handleIncrement}
-                className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold flex items-center justify-center transition-colors"
                 aria-label="Augmenter la quantité"
               >
                 <Plus className="w-4 h-4" />
@@ -186,7 +186,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
 
           {/* Custom instructions / Notes */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 block">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
               Instructions particulières / Précisions pour votre commande (facultatif)
             </label>
             <textarea
@@ -194,17 +194,17 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               value={customNotes}
               onChange={(e) => setCustomNotes(e.target.value)}
               placeholder="Ex: Mon poste ciblé pour le CV, le titre de mon affiche, la date limite..."
-              className="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:bg-white text-slate-800"
+              className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-850 text-slate-800 dark:text-white placeholder:text-slate-400"
             />
           </div>
 
           {/* Optional file upload */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 block">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
               Joindre un document ou une photo (facultatif)
             </label>
-            <label className="flex items-center justify-center space-x-2 p-3 border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl bg-slate-50 cursor-pointer transition-colors text-xs text-slate-600">
-              <Upload className="w-4 h-4 text-blue-600" />
+            <label className="flex items-center justify-center space-x-2 p-3 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-xl bg-slate-50 dark:bg-slate-800 cursor-pointer transition-colors text-xs text-slate-600 dark:text-slate-300">
+              <Upload className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span>{uploadedFileName ? `Fichier prêt : ${uploadedFileName}` : 'Glisser ou cliquer pour sélectionner votre fichier'}</span>
               <input type="file" onChange={handleFileUpload} className="hidden" />
             </label>
@@ -214,9 +214,9 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           </div>
 
           {/* Wave & WhatsApp guarantees */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 text-xs">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 text-blue-900 dark:text-blue-300 text-xs">
             <div className="flex items-center space-x-2">
-              <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-blue-700 dark:text-blue-400 flex-shrink-0" />
               <span className="font-semibold">Paiement 100% sécurisé via Wave Business & Support WhatsApp</span>
             </div>
           </div>
@@ -224,11 +224,11 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           
           <div className="text-center sm:text-left w-full sm:w-auto">
-            <span className="text-xs text-slate-500 block">Total à régler :</span>
-            <span className="text-2xl font-black text-blue-950 font-['Outfit']">
+            <span className="text-xs text-slate-500 dark:text-slate-400 block">Total à régler :</span>
+            <span className="text-2xl font-black text-blue-950 dark:text-blue-300 font-['Outfit']">
               {formatFCFA(totalPrice)}
             </span>
           </div>
