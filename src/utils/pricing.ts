@@ -1,8 +1,70 @@
-import { CartItem, ServiceItem } from '../types';
+import { CartItem, ServiceItem, TurnaroundOption, UploadedFile } from '../types';
 import { CONTACT_INFO, SERVICES_DATA } from '../data/servicesData';
 
 export function formatFCFA(amount: number): string {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
+}
+
+export const TURNAROUND_OPTIONS: TurnaroundOption[] = [
+  {
+    id: 'ultra-express',
+    label: 'Ultra Express (< 4 Heures)',
+    hoursDetail: 'Moins de 4 heures chrono',
+    badge: '⚡ Priorité Maximale',
+    description: 'Traitement immédiat par notre équipe, prioritaire sur toutes les commandes.',
+    recommended: false
+  },
+  {
+    id: 'express-same-day',
+    label: 'Express Journée (< 12 Heures)',
+    hoursDetail: 'Moins de 12 heures ouvrées',
+    badge: '🚀 Même Journée',
+    description: 'Livraison express garantie dans la journée avant 19h00.',
+    recommended: true
+  },
+  {
+    id: 'standard',
+    label: 'Standard Rapide (24h à 48h)',
+    hoursDetail: '24 à 48 heures',
+    badge: '⏱️ Délai Classique',
+    description: 'Rythme normal de traitement avec vérification qualité complète.',
+    recommended: false
+  },
+  {
+    id: 'scheduled',
+    label: 'Planifié / Gros Dossier (72h et +)',
+    hoursDetail: '72 heures et plus',
+    badge: '📅 Volume & Sérénité',
+    description: 'Idéal pour thèses universitaires, gros mémoires, relectures denses ou gros packs.',
+    recommended: false
+  }
+];
+
+/**
+ * Instantiates the exact payment amount into the Wave Payment Link
+ * This prevents underpayment and locks the exact expected service price.
+ */
+export function generateWavePaymentUrl(amount?: number, memo?: string): string {
+  const baseUrl = CONTACT_INFO.wavePaymentUrl;
+  if (!amount || amount <= 0) {
+    return baseUrl;
+  }
+  
+  const params = new URLSearchParams();
+  params.set('amount', amount.toString());
+  params.set('currency', 'XOF');
+  if (memo) {
+    params.set('memo', memo.slice(0, 50));
+  }
+  
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${separator}${params.toString()}`;
 }
 
 export function calculateServicePrice(
@@ -112,9 +174,10 @@ export function calculateServicePrice(
 
 export function generateWhatsAppOrderLink(
   cart: CartItem[],
-  customerInfo?: { name?: string; phone?: string; notes?: string; urgency?: string }
+  customerInfo?: { name?: string; phone?: string; notes?: string; urgency?: string; turnaroundOption?: TurnaroundOption }
 ): string {
   const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  const waveDirectUrl = generateWavePaymentUrl(totalAmount, `Cmd Okbw ${customerInfo?.name ? '(' + customerInfo.name + ')' : ''}`);
 
   let message = `👋 *Bonjour Okbw Bureautique et Design !*\n\n`;
   message += `Je souhaite passer une commande via votre site web :\n`;
@@ -128,50 +191,77 @@ export function generateWhatsAppOrderLink(
     if (item.customNotes) {
       message += `   • Instructions : _${item.customNotes}_\n`;
     }
-    if (item.fileName) {
-      message += `   • Fichier associé : 📎 ${item.fileName}\n`;
+    if (item.files && item.files.length > 0) {
+      message += `   • Fichiers exemplaires joints (${item.files.length}) :\n`;
+      item.files.forEach(f => {
+        message += `     📎 ${f.name} (${formatFileSize(f.size)})\n`;
+      });
+    } else if (item.fileName) {
+      message += `   • Fichier exemplaire associé : 📎 ${item.fileName}\n`;
     }
     message += `\n`;
   });
 
   message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `💰 *TOTAL DE LA COMMANDE : ${formatFCFA(totalAmount)}*\n\n`;
+  message += `💰 *MONTANT EXACT VERROUILLÉ : ${formatFCFA(totalAmount)}*\n\n`;
 
   if (customerInfo?.name) {
-    message += `👤 *Client* : ${customerInfo.name}\n`;
+    message += `👤 *Nom du Client* : ${customerInfo.name}\n`;
   }
   if (customerInfo?.phone) {
-    message += `📱 *Téléphone* : ${customerInfo.phone}\n`;
+    message += `📱 *Téléphone / WhatsApp* : ${customerInfo.phone}\n`;
   }
-  if (customerInfo?.urgency) {
-    message += `⏱️ *Délai souhaité* : ${customerInfo.urgency}\n`;
+  if (customerInfo?.turnaroundOption) {
+    message += `⏱️ *Délai sélectionné* : ${customerInfo.turnaroundOption.label} (${customerInfo.turnaroundOption.hoursDetail})\n`;
+  } else if (customerInfo?.urgency) {
+    message += `⏱️ *Délai sélectionné* : ${customerInfo.urgency}\n`;
   }
   if (customerInfo?.notes) {
-    message += `📝 *Notes complémentaires* : ${customerInfo.notes}\n`;
+    message += `📝 *Consignes particulières* : ${customerInfo.notes}\n`;
   }
 
-  message += `\n💳 *Mode de règlement souhaité* : Wave Business ou Mobile Money\n`;
-  message += `🔗 Lien de paiement Wave préparé : ${CONTACT_INFO.wavePaymentUrl}\n\n`;
-  message += `Merci de me confirmer la prise en charge et les étapes de transmission des documents !`;
+  message += `\n🔒 *Lien de Paiement Wave Officiel (Montant Verrouillé ${formatFCFA(totalAmount)})* :\n`;
+  message += `👉 ${waveDirectUrl}\n\n`;
+  message += `_Ce lien intègre directement le montant exact de ${formatFCFA(totalAmount)} pour sécuriser et valider immédiatement ma commande sans risque d'erreur de montant._\n\n`;
+  message += `Merci de me confirmer la réception de mes fichiers et le lancement du travail !`;
 
   const encoded = encodeURIComponent(message);
   return `https://wa.me/2250501088608?text=${encoded}`;
 }
 
-export function generateQuickServiceWhatsAppLink(service: ServiceItem, quantity: number = 1): string {
+export function generateQuickServiceWhatsAppLink(
+  service: ServiceItem, 
+  quantity: number = 1,
+  files?: UploadedFile[],
+  turnaround?: TurnaroundOption
+): string {
   const { totalPrice, unitPrice, ruleApplied } = calculateServicePrice(service, quantity);
+  const waveDirectUrl = generateWavePaymentUrl(totalPrice, `Service ${service.name.slice(0, 30)}`);
   
   let message = `👋 *Bonjour Okbw Bureautique et Design !*\n\n`;
   message += `Je souhaite commander directement la prestation suivante :\n\n`;
   message += `📌 *Prestation* : ${service.name}\n`;
   message += `🔢 *Quantité* : ${quantity} (${service.unitLabel})\n`;
-  message += `💵 *Tarif estimé* : ${formatFCFA(totalPrice)} (${formatFCFA(unitPrice)}/unité)\n`;
+  message += `💵 *Montant exact verrouillé* : ${formatFCFA(totalPrice)} (${formatFCFA(unitPrice)}/unité)\n`;
   if (ruleApplied) {
-    message += `✨ *Offre appliquée* : ${ruleApplied}\n`;
+    message += `✨ *Règle appliquée* : ${ruleApplied}\n`;
   }
-  message += `⏱️ *Délai estimé* : ${service.deliveryTime}\n\n`;
-  message += `Je suis prêt à payer via Wave Business (${CONTACT_INFO.wavePaymentUrl}).\n`;
-  message += `Comment procédons-nous pour l'envoi de mes fichiers / informations ?`;
+  if (turnaround) {
+    message += `⏱️ *Délai sélectionné* : ${turnaround.label} (${turnaround.hoursDetail})\n`;
+  } else {
+    message += `⏱️ *Délai estimé* : ${service.deliveryTime}\n`;
+  }
+
+  if (files && files.length > 0) {
+    message += `📁 *Fichiers exemplaires prêts (${files.length})* :\n`;
+    files.forEach(f => {
+      message += `   📎 ${f.name} (${formatFileSize(f.size)})\n`;
+    });
+  }
+
+  message += `\n🔒 *Lien de paiement Wave sécurisé avec montant exact (${formatFCFA(totalPrice)})* :\n`;
+  message += `👉 ${waveDirectUrl}\n\n`;
+  message += `Je transmets mes consignes et fichiers pour démarrage immédiat. Merci !`;
 
   return `https://wa.me/2250501088608?text=${encodeURIComponent(message)}`;
 }

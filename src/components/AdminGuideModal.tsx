@@ -251,13 +251,14 @@ export const AdminGuideModal: React.FC<AdminGuideModalProps> = ({ isOpen, onClos
                   </p>
 
                   <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300/80 dark:border-emerald-700/50 font-mono text-[11px] text-slate-800 dark:text-slate-200 space-y-1">
-                    <p className="font-bold text-emerald-700 dark:text-emerald-400">✨ NOUVELLE COMMANDE - OKBW ✨</p>
-                    <p>📦 <strong>Prestation :</strong> CV Professionnel + Costume Virtuel</p>
-                    <p>🔢 <strong>Quantité :</strong> 1</p>
-                    <p>💰 <strong>Total :</strong> 1 000 FCFA</p>
-                    <p>⏱️ <strong>Délai souhaité :</strong> Express (2h - 24h)</p>
-                    <p>💳 <strong>Paiement prévu :</strong> Wave Business</p>
-                    <p className="text-slate-500 pt-1">"Bonjour Okbw ! Je souhaite confirmer ma commande..."</p>
+                    <p className="font-bold text-emerald-700 dark:text-emerald-400">✨ NOUVELLE COMMANDE OKBW ✨</p>
+                    <p>📦 <strong>Prestation :</strong> Saisie de texte & Mise en page</p>
+                    <p>🔢 <strong>Quantité :</strong> 55 pages (Tarif Dégressif)</p>
+                    <p>💰 <strong>Montant Verrouillé :</strong> 11 000 FCFA</p>
+                    <p>⏱️ <strong>Délai (Coché) :</strong> Express Journée (&lt; 12 Heures)</p>
+                    <p>📎 <strong>Fichiers exemplaires joints :</strong> manuscrit_chapitre1.docx, modele_mise_en_page.pdf</p>
+                    <p>🔒 <strong>Lien Wave avec montant instancié :</strong> https://wave.com/b/B_s5iX75b-0zQ?amount=11000</p>
+                    <p className="text-slate-500 pt-1">"Le client clique sur le lien Wave où 11 000 F est déjà pré-rempli sans risque d'erreur !"</p>
                   </div>
                 </div>
 

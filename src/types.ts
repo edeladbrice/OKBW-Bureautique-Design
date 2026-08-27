@@ -32,6 +32,24 @@ export interface ServiceItem {
   recommended?: boolean;
 }
 
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  previewUrl?: string;
+}
+
+export interface TurnaroundOption {
+  id: string;
+  label: string;
+  hoursDetail: string;
+  badge: string;
+  description: string;
+  priceModifierPercent?: number;
+  recommended?: boolean;
+}
+
 export interface CartItem {
   service: ServiceItem;
   quantity: number;
@@ -39,7 +57,9 @@ export interface CartItem {
   totalPrice: number;
   customNotes?: string;
   fileName?: string;
+  files?: UploadedFile[];
   selectedOption?: string;
+  selectedTurnaroundId?: string;
 }
 
 export interface PortfolioItem {

@@ -12,7 +12,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { FloatingContact } from './components/FloatingContact';
 import { Footer } from './components/Footer';
 import { AdminGuideModal } from './components/AdminGuideModal';
-import { CartItem, ServiceItem } from './types';
+import { CartItem, ServiceItem, UploadedFile } from './types';
 import { calculateServicePrice } from './utils/pricing';
 
 export default function App() {
@@ -83,7 +83,9 @@ export default function App() {
     service: ServiceItem,
     quantity: number = 1,
     customNotes?: string,
-    fileName?: string
+    fileName?: string,
+    files?: UploadedFile[],
+    turnaroundId?: string
   ) => {
     setCart((prevCart) => {
       const existingIndex = prevCart.findIndex(
@@ -99,7 +101,9 @@ export default function App() {
           quantity: newQty,
           unitPrice,
           totalPrice,
-          fileName: fileName || updated[existingIndex].fileName
+          fileName: fileName || updated[existingIndex].fileName,
+          files: files && files.length > 0 ? files : updated[existingIndex].files,
+          selectedTurnaroundId: turnaroundId || updated[existingIndex].selectedTurnaroundId
         };
         return updated;
       } else {
@@ -110,7 +114,9 @@ export default function App() {
           unitPrice,
           totalPrice,
           customNotes,
-          fileName
+          fileName,
+          files,
+          selectedTurnaroundId: turnaroundId
         };
         return [...prevCart, newItem];
       }
