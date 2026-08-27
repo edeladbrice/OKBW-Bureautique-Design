@@ -1,0 +1,348 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  FileText, 
+  Palette, 
+  FileCheck2, 
+  Sparkles, 
+  Globe, 
+  Search, 
+  Filter, 
+  Plus, 
+  ShoppingBag, 
+  ArrowRight, 
+  Check, 
+  Info, 
+  Zap, 
+  CreditCard, 
+  MessageSquare,
+  Clock,
+  ChevronRight,
+  Shield,
+  Layers
+} from 'lucide-react';
+import { ServiceItem, ServiceCategory } from '../types';
+import { SERVICES_DATA, CONTACT_INFO } from '../data/servicesData';
+import { formatFCFA, generateQuickServiceWhatsAppLink } from '../utils/pricing';
+
+interface ServicesCatalogProps {
+  onAddToCart: (service: ServiceItem, quantity?: number) => void;
+  onSelectService: (service: ServiceItem) => void;
+  onOpenCalculator: () => void;
+}
+
+export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
+  onAddToCart,
+  onSelectService,
+  onOpenCalculator
+}) => {
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [addedAnimationId, setAddedAnimationId] = useState<string | null>(null);
+
+  const categories: { id: ServiceCategory; label: string; count: number; icon: React.ReactNode }[] = [
+    { 
+      id: 'all', 
+      label: 'Toutes les Prestations', 
+      count: SERVICES_DATA.length,
+      icon: <Layers className="w-4 h-4" /> 
+    },
+    { 
+      id: 'bureautique', 
+      label: 'Bureautique & Documents', 
+      count: SERVICES_DATA.filter(s => s.category === 'bureautique').length,
+      icon: <FileText className="w-4 h-4" /> 
+    },
+    { 
+      id: 'design', 
+      label: 'Design Graphique & Image', 
+      count: SERVICES_DATA.filter(s => s.category === 'design').length,
+      icon: <Palette className="w-4 h-4" /> 
+    },
+    { 
+      id: 'pdf', 
+      label: 'Solutions PDF & Conversion', 
+      count: SERVICES_DATA.filter(s => s.category === 'pdf').length,
+      icon: <FileCheck2 className="w-4 h-4" /> 
+    },
+    { 
+      id: 'optimisation', 
+      label: 'Scan & Optimisation', 
+      count: SERVICES_DATA.filter(s => s.category === 'optimisation').length,
+      icon: <Sparkles className="w-4 h-4" /> 
+    },
+    { 
+      id: 'web', 
+      label: 'Création Web & Informatique', 
+      count: SERVICES_DATA.filter(s => s.category === 'web').length,
+      icon: <Globe className="w-4 h-4" /> 
+    },
+  ];
+
+  const filteredServices = useMemo(() => {
+    return SERVICES_DATA.filter((service) => {
+      const matchesCategory = selectedCategory === 'all' || service.category === selectedCategory;
+      const matchesQuery = 
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (service.promoNote && service.promoNote.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesQuery;
+    });
+  }, [selectedCategory, searchQuery]);
+
+  const handleQuickAdd = (service: ServiceItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToCart(service, 1);
+    setAddedAnimationId(service.id);
+    setTimeout(() => setAddedAnimationId(null), 1200);
+  };
+
+  return (
+    <section id="catalogue" className="py-20 bg-[#F4F7F9] border-t border-slate-200 scroll-mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 text-[#0F52BA] border border-blue-200/80 text-xs font-bold uppercase tracking-wider">
+            <ShoppingBag className="w-3.5 h-3.5 text-[#FF8800]" />
+            <span>Boutique & Prestations en Ligne</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-['Outfit'] tracking-tight">
+            Catalogue des Services & Commandes Directes
+          </h2>
+          <p className="text-base text-slate-600">
+            Commandez vos prestations en 1 clic avec nos tarifs dégressifs transparents. Règlement sécurisé via Wave Business et confirmation directe sur WhatsApp.
+          </p>
+        </div>
+
+        {/* Filter Controls & Search */}
+        <div className="space-y-4 mb-10">
+          
+          {/* Category Tabs */}
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
+            {categories.map((cat) => {
+              const active = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  id={`cat-btn-${cat.id}`}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 border ${
+                    active
+                      ? 'bg-[#0F52BA] text-white border-[#0F52BA] shadow-md shadow-blue-900/20'
+                      : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50 hover:border-slate-300'
+                  }`}
+                >
+                  <span className={active ? 'text-[#FF8800]' : 'text-slate-500'}>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                    active ? 'bg-[#FF8800] text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search bar & Quick Calculator Trigger */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-3xl border border-slate-200/80 shadow-sm">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                id="search-services-input"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher un service (ex: CV, Affiche, Logo, Saisie, PDF...)"
+                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0F52BA] focus:bg-white text-slate-800"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600"
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+
+            <button
+              id="catalog-calc-banner-btn"
+              onClick={onOpenCalculator}
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-[#FF8800] hover:brightness-110 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-orange-500/20 transition-all whitespace-nowrap"
+            >
+              <Zap className="w-4 h-4 text-white" />
+              <span>Simulateur de Devis Express</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Results Counter */}
+        <div className="flex items-center justify-between text-xs text-slate-500 font-medium mb-6 px-1">
+          <span>{filteredServices.length} prestation(s) trouvée(s)</span>
+          <span className="hidden sm:inline">Tarifs indiqués en Francs CFA (FCFA) - Net de taxe</span>
+        </div>
+
+        {/* Bento Services Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredServices.map((service) => {
+            const isAdded = addedAnimationId === service.id;
+            return (
+              <div
+                key={service.id}
+                id={`service-card-${service.id}`}
+                onClick={() => onSelectService(service)}
+                className={`group bg-white rounded-3xl border transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 ${
+                  service.recommended 
+                    ? 'border-[#0F52BA]/50 shadow-md ring-1 ring-[#0F52BA]/20' 
+                    : 'border-slate-200/90 shadow-sm hover:border-[#0F52BA]/40'
+                }`}
+              >
+                {/* Top Card Body */}
+                <div className="p-6 space-y-4">
+                  
+                  {/* Badge & Delivery */}
+                  <div className="flex items-center justify-between gap-2">
+                    {service.badge ? (
+                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${
+                        service.recommended 
+                          ? 'bg-[#0F52BA] text-white' 
+                          : 'bg-orange-50 text-[#FF8800] border border-orange-200'
+                      }`}>
+                        {service.badge}
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 uppercase tracking-wider">
+                        {service.category}
+                      </span>
+                    )}
+
+                    <div className="flex items-center space-x-1 text-[11px] font-medium text-slate-500">
+                      <Clock className="w-3.5 h-3.5 text-[#0F52BA]" />
+                      <span>{service.deliveryTime}</span>
+                    </div>
+                  </div>
+
+                  {/* Title & Price */}
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 font-['Outfit'] group-hover:text-[#0F52BA] transition-colors leading-snug">
+                      {service.name}
+                    </h3>
+                    <div className="mt-2 flex items-baseline space-x-2">
+                      <span className="text-2xl font-black text-[#0F52BA] font-['Outfit']">
+                        {service.priceDisplay}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">
+                        / {service.unitLabel}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-3">
+                    {service.description}
+                  </p>
+
+                  {/* Promo & Volume Badge */}
+                  {service.promoNote && (
+                    <div className="p-3 rounded-2xl bg-orange-50/80 border border-orange-200 text-orange-950 text-xs font-semibold flex items-start space-x-2">
+                      <Zap className="w-4 h-4 text-[#FF8800] flex-shrink-0 mt-0.5" />
+                      <span>{service.promoNote}</span>
+                    </div>
+                  )}
+
+                  {/* Inclusions list preview */}
+                  <div className="pt-3 border-t border-slate-100 space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Inclus :</span>
+                    {service.inclusions.slice(0, 3).map((inc, i) => (
+                      <div key={i} className="flex items-start space-x-2 text-xs text-slate-600">
+                        <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{inc}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+
+                {/* Bottom Actions Bar */}
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                  
+                  {/* View Details button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectService(service);
+                    }}
+                    className="text-xs font-bold text-slate-700 hover:text-[#0F52BA] flex items-center space-x-1 px-2.5 py-1.5 rounded-xl hover:bg-white transition-colors"
+                  >
+                    <Info className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Options & Détails</span>
+                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    {/* Direct WhatsApp fast order */}
+                    <a
+                      href={generateQuickServiceWhatsAppLink(service, 1)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all"
+                      title="Commander directement via WhatsApp"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </a>
+
+                    {/* Add to Cart button */}
+                    <button
+                      type="button"
+                      id={`add-to-cart-btn-${service.id}`}
+                      onClick={(e) => handleQuickAdd(service, e)}
+                      className={`flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                        isAdded
+                          ? 'bg-emerald-600 text-white scale-105'
+                          : 'bg-[#0F52BA] hover:brightness-110 text-white shadow-md shadow-blue-900/15'
+                      }`}
+                    >
+                      {isAdded ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Ajouté !</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="w-3.5 h-3.5 text-[#FF8800]" />
+                          <span>Commander</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {filteredServices.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+            <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-slate-800">Aucune prestation ne correspond à votre recherche</h3>
+            <p className="text-sm text-slate-500 mt-1">Essayez un autre mot clé ou réinitialisez les filtres.</p>
+            <button
+              onClick={() => {
+                setSelectedCategory('all');
+                setSearchQuery('');
+              }}
+              className="mt-4 px-5 py-2.5 rounded-2xl bg-[#0F52BA] text-white text-xs font-bold shadow-md"
+            >
+              Afficher tout le catalogue
+            </button>
+          </div>
+        )}
+
+      </div>
+    </section>
+  );
+};

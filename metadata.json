@@ -1,0 +1,6 @@
+{
+  "name": "Okbw Bureautique et Design",
+  "description": "Plateforme e-commerce et vitrine professionnelle pour services informatiques, bureautique, design graphique et solutions PDF avec paiement Wave et commande WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
