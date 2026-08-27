@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { CustomerStepGuide } from './components/CustomerStepGuide';
 import { ServicesCatalog } from './components/ServicesCatalog';
 import { ServiceDetailModal } from './components/ServiceDetailModal';
 import { PriceCalculatorModal } from './components/PriceCalculatorModal';
@@ -182,6 +183,12 @@ export default function App() {
           onOpenCalculator={() => setIsCalculatorOpen(true)}
           onExploreServices={scrollToCatalog}
           onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
+        />
+
+        {/* Visual Step-by-Step Customer Guide (Orienting Clients) */}
+        <CustomerStepGuide
+          onExploreCatalog={scrollToCatalog}
+          onOpenCalculator={() => setIsCalculatorOpen(true)}
         />
 
         {/* E-commerce Services Catalog & Ordering */}

@@ -108,6 +108,15 @@ export const Hero: React.FC<HeroProps> = ({
                   <Zap className="w-4 h-4 text-[#FF8800]" />
                   <span>Simulateur Prix</span>
                 </button>
+
+                <a
+                  id="hero-bento-guide-btn"
+                  href="#guide-client"
+                  className="bg-white/10 hover:bg-white/20 text-white/90 hover:text-white border border-white/20 px-4 sm:px-5 py-3 rounded-2xl font-bold text-sm backdrop-blur-sm transition-all flex items-center space-x-1.5"
+                >
+                  <Sparkles className="w-4 h-4 text-orange-300" />
+                  <span>Guide Pas à Pas</span>
+                </a>
               </div>
 
               <div className="flex items-center space-x-4 text-[11px] text-blue-200 pt-2 border-t border-white/15">

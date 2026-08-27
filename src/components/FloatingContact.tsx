@@ -16,6 +16,17 @@ export const FloatingContact: React.FC<FloatingContactProps> = ({
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-3 pointer-events-none">
       
+      {/* Quick Step Guide for Customers */}
+      <a
+        id="floating-guide-btn"
+        href="#guide-client"
+        className="pointer-events-auto p-2.5 sm:px-3 sm:py-2 rounded-full bg-blue-600/90 hover:bg-blue-600 text-white shadow-lg border border-blue-400 text-xs font-bold flex items-center space-x-1.5 backdrop-blur-md hover:scale-105 active:scale-95 transition-all"
+        title="Comment se déroule votre commande ? Guide pas à pas"
+      >
+        <span className="text-amber-300 font-black">?</span>
+        <span className="hidden sm:inline text-[11px]">Guide Pas à Pas</span>
+      </a>
+
       {/* Quick Guide Trigger for Owner */}
       {onOpenAdminGuide && (
         <button
