@@ -182,6 +182,7 @@ export const WavePaymentModal: React.FC<WavePaymentModalProps> = ({
           {/* Action Button 1: Direct Wave Pay */}
           <div className="space-y-2.5 pt-2">
             <button
+              id="wave-modal-pay-direct-btn"
               onClick={handleOpenWave}
               className="w-full py-4 px-5 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-sky-600/30 transition-all flex items-center justify-center space-x-2.5"
             >
@@ -192,6 +193,7 @@ export const WavePaymentModal: React.FC<WavePaymentModalProps> = ({
 
             {/* Action Button 2: WhatsApp Confirmation */}
             <button
+              id="wave-modal-whatsapp-confirm-btn"
               onClick={handleWhatsAppNotify}
               className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center space-x-2"
             >
