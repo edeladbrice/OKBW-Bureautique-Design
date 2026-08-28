@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Trash2, 
@@ -10,14 +10,16 @@ import {
   ShieldCheck, 
   Zap, 
   CheckCircle2, 
-  Clock,
-  Sparkles,
-  Receipt,
-  User,
-  Phone,
-  FileText,
-  Check,
-  SendHorizontal
+  Clock, 
+  Sparkles, 
+  Receipt, 
+  User, 
+  Phone, 
+  FileText, 
+  Check, 
+  SendHorizontal,
+  Scale,
+  Lock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CartItem, TurnaroundOption } from '../types';
@@ -26,6 +28,8 @@ import {
   formatFCFA, 
   generateWhatsAppOrderLink, 
   TURNAROUND_OPTIONS,
+  ADMINISTRATIVE_LOCKED_TURNAROUND,
+  hasAdministrativeService,
   DISPLAY_CONTACTS
 } from '../utils/pricing';
 import { TurnaroundSelector } from './TurnaroundSelector';
@@ -51,12 +55,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const hasAdmin = hasAdministrativeService(cart);
+
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption>(() => {
+    if (hasAdmin) {
+      return ADMINISTRATIVE_LOCKED_TURNAROUND;
+    }
     return TURNAROUND_OPTIONS.find(t => t.id === 'express-same-day') || TURNAROUND_OPTIONS[1];
   });
   const [orderNotes, setOrderNotes] = useState('');
+
+  useEffect(() => {
+    if (hasAdmin) {
+      setSelectedTurnaround(ADMINISTRATIVE_LOCKED_TURNAROUND);
+    }
+  }, [hasAdmin]);
 
   const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
@@ -72,7 +87,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     const whatsappUrl = generateWhatsAppOrderLink(cart, {
       name: customerName,
       phone: customerPhone,
-      turnaroundOption: selectedTurnaround,
+      turnaroundOption: hasAdmin ? ADMINISTRATIVE_LOCKED_TURNAROUND : selectedTurnaround,
       notes: orderNotes
     });
 
@@ -89,7 +104,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const instructionsSummary = [
     customerPhone.trim() ? `Tél: ${customerPhone.trim()}` : '',
-    `Délai : ${selectedTurnaround.label}`,
+    hasAdmin ? 'Délai légal : 72h ouvrées (3 jours)' : `Délai : ${selectedTurnaround.label}`,
     orderNotes.trim()
   ].filter(Boolean).join(' | ') || 'Prestation standard';
 
@@ -138,7 +153,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <h3 className="text-base font-bold text-slate-800 dark:text-white">Votre panier est vide</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                  Explorez nos services de bureautique, de design graphique et solutions PDF pour démarrer votre commande.
+                  Explorez nos services de bureautique, de design graphique et solutions judiciaires pour démarrer votre commande.
                 </p>
                 <button
                   onClick={() => {
@@ -153,6 +168,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             ) : (
               /* Cart items list */
               <div className="space-y-6">
+                
+                {/* Administrative banner if cart contains casier / nationalité */}
+                {hasAdmin && (
+                  <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border-2 border-[#FF5E14] text-xs text-orange-950 dark:text-orange-200 space-y-2">
+                    <div className="flex items-center space-x-2 font-bold text-[#FF5E14] dark:text-orange-300">
+                      <Scale className="w-4 h-4 flex-shrink-0" />
+                      <span>Note légale relative aux actes administratifs / judiciaires</span>
+                    </div>
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                      Votre panier contient des actes d'État (Nationalité / Casier Judiciaire). Le règlement est requis pour engager la demande auprès du greffe. Votre <strong>reçu officiel de demande et transaction</strong> est envoyé immédiatement après confirmation du paiement, et le <strong>document officiel physique est disponible sous 72h (3 jours)</strong>.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <span>Détail des articles ({cart.length})</span>
@@ -232,9 +261,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
                   <TurnaroundSelector
                     selectedId={selectedTurnaround.id}
-                    onSelect={(opt) => setSelectedTurnaround(opt)}
-                    title="Délai de Livraison Souhaité (Cases à cocher)"
-                    subtitle="Cochez le créneau exact pour l'ensemble de votre commande :"
+                    onSelect={(opt) => {
+                      if (!hasAdmin) {
+                        setSelectedTurnaround(opt);
+                      }
+                    }}
+                    title={hasAdmin ? "Délai Réglementaire (Verrouillé 72h)" : "Délai de Livraison Souhaité (Cases à cocher)"}
+                    subtitle={hasAdmin ? "Le délai légal de 72h (3 jours) s'applique aux actes judiciaires du panier :" : "Cochez le créneau exact pour l'ensemble de votre commande :"}
+                    isAdministrativeLocked={hasAdmin}
                   />
                 </div>
 
@@ -242,13 +276,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-3">
                   <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
                     <User className="w-4 h-4 text-[#0F52BA] dark:text-blue-400" />
-                    <span>Coordonnées du client & Consignes</span>
+                    <span>Coordonnées du demandeur / client</span>
                   </div>
 
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1 block">
-                        Nom & Prénoms du client <span className="text-red-500">*</span>
+                        Nom & Prénoms du client / demandeur <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -280,7 +314,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         rows={2}
                         value={orderNotes}
                         onChange={(e) => setOrderNotes(e.target.value)}
-                        placeholder="Consignes particulières, instructions de police, couleurs, cadrage..."
+                        placeholder="Consignes particulières, précisions administratives, dates, juridictions..."
                         className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-[#0F52BA] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium transition-colors"
                       />
                     </div>
@@ -306,13 +340,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           <p><strong className="text-slate-900 dark:text-white">• Quantité / Pages :</strong> {totalQtyText}</p>
                           <p><strong className="text-slate-900 dark:text-white">• Nom du client :</strong> <span className={customerName.trim() ? "text-blue-600 dark:text-blue-400 font-semibold" : "italic text-slate-400 dark:text-slate-500"}>{customerName.trim() || 'Non renseigné'}</span></p>
                           <p><strong className="text-slate-900 dark:text-white">• Instructions :</strong> {instructionsSummary}</p>
-                          <p><strong className="text-slate-900 dark:text-white">• Montant à régler à la livraison :</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalAmount)}</span></p>
+                          <p><strong className="text-slate-900 dark:text-white">• Montant total :</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalAmount)}</span></p>
                         </div>
 
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">
-                          Je vous joins mes fichiers ci-dessous dans cette discussion.<br />
-                          (J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).
-                        </p>
+                        {hasAdmin ? (
+                          <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-[11px] text-orange-950 dark:text-orange-200 space-y-0.5 border border-orange-200 dark:border-orange-800">
+                            <p className="font-bold text-orange-900 dark:text-orange-300">⚖️ Rappel démarches administratives :</p>
+                            <p>Paiement obligatoire pour engager la demande • Reçu officiel de demande et transaction immédiat • Retrait physique du document sous 72h (3 jours).</p>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">
+                            Je vous joins mes fichiers ci-dessous dans cette discussion.<br />
+                            (J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).
+                          </p>
+                        )}
+
                         <p className="text-[10px] text-slate-500 dark:text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">
                           Contacts : {DISPLAY_CONTACTS}
                         </p>
@@ -323,22 +365,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start space-x-2">
                       <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                       <span>
-                        <strong>Joindre vos fichiers :</strong> Vous joindrez directement vos documents (photos, Word, PDF, scans) dans la discussion WhatsApp après avoir cliqué sur <em>Valider la commande sur WhatsApp</em>.
+                        <strong>Joindre vos pièces & fichiers :</strong> Vous joindrez directement vos documents (photos des pièces d'identité, Word, PDF, scans) dans la discussion WhatsApp après avoir validé.
                       </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Safe Delivery payment banner */}
-                <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 flex items-start space-x-3 text-xs">
-                  <ShieldCheck className="w-4 h-4 text-[#0F52BA] dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-slate-700 dark:text-slate-300">
-                    <span className="font-bold text-blue-950 dark:text-blue-200 block">
-                      Règlement à la livraison sans aucun risque
-                    </span>
-                    <span className="text-[11px] text-slate-600 dark:text-slate-400">
-                      Vous validerez le paiement Wave / Mobile Money ({formatFCFA(totalAmount)}) uniquement après avoir inspecté et approuvé l'aperçu de votre commande.
-                    </span>
                   </div>
                 </div>
 
@@ -354,8 +383,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               {/* Total Calculation Display */}
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">Montant à régler à la livraison</span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Sans frais de transaction • 0% frais</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">
+                    {hasAdmin ? "Montant total de la commande" : "Montant à régler à la livraison"}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Sans frais cachés • Service officiel</span>
                 </div>
                 <span className="text-2xl sm:text-3xl font-black text-[#0F52BA] dark:text-blue-300 font-['Outfit']">
                   {formatFCFA(totalAmount)}
@@ -369,7 +400,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 className="w-full py-4 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-950/20 transition-all flex items-center justify-center space-x-2"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Valider la commande sur WhatsApp</span>
+                <span>{hasAdmin ? "Valider la commande & démarches sur WhatsApp" : "Valider la commande sur WhatsApp"}</span>
               </button>
 
               <div className="flex items-center justify-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
@@ -385,4 +416,5 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     </div>
   );
 };
+
 

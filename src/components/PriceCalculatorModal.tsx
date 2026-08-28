@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Calculator, 
@@ -10,7 +10,9 @@ import {
   Percent, 
   Sparkles,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Scale,
+  Lock
 } from 'lucide-react';
 import { ServiceItem, TurnaroundOption } from '../types';
 import { SERVICES_DATA, CONTACT_INFO } from '../data/servicesData';
@@ -18,7 +20,9 @@ import {
   calculateServicePrice, 
   formatFCFA, 
   generateQuickServiceWhatsAppLink,
-  TURNAROUND_OPTIONS
+  TURNAROUND_OPTIONS,
+  ADMINISTRATIVE_LOCKED_TURNAROUND,
+  isAdministrativeService
 } from '../utils/pricing';
 import { TurnaroundSelector } from './TurnaroundSelector';
 
@@ -42,6 +46,14 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
   });
 
   const selectedService = SERVICES_DATA.find((s) => s.id === selectedServiceId) || SERVICES_DATA[0];
+  const isAdministrative = isAdministrativeService(selectedService);
+
+  useEffect(() => {
+    if (isAdministrative) {
+      setSelectedTurnaround(ADMINISTRATIVE_LOCKED_TURNAROUND);
+    }
+  }, [selectedServiceId, isAdministrative]);
+
   const { unitPrice, totalPrice, savings, ruleApplied } = calculateServicePrice(selectedService, quantity);
 
   // Suggested quick quantities based on service
@@ -78,7 +90,11 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-900 via-blue-950 to-slate-900 text-white p-6 relative">
+        <div className={`p-6 relative text-white ${
+          isAdministrative 
+            ? 'bg-gradient-to-r from-[#FF5E14] via-slate-900 to-slate-950'
+            : 'bg-gradient-to-r from-blue-900 via-blue-950 to-slate-900'
+        }`}>
           <button
             id="close-calculator-modal-btn"
             onClick={onClose}
@@ -90,14 +106,16 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
 
           <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
             <Calculator className="w-4 h-4" />
-            <span>Simulateur Interactif de Tarifs Dégressifs</span>
+            <span>{isAdministrative ? "Simulateur Actes Administratifs & Judiciaires" : "Simulateur Interactif de Tarifs Dégressifs"}</span>
           </div>
 
           <h2 className="text-xl sm:text-2xl font-black font-['Outfit'] pr-8">
-            Calculez votre devis instantané
+            {isAdministrative ? "Estimez votre démarche officielle" : "Calculez votre devis instantané"}
           </h2>
           <p className="text-xs text-slate-300 mt-1">
-            Ajustez les curseurs pour observer les réductions par volume et le montant exact garanti.
+            {isAdministrative 
+              ? "Reçu officiel de demande immédiat dès le paiement • Retrait physique du document sous 72h (3 jours)."
+              : "Ajustez les curseurs pour observer les réductions par volume et le montant exact garanti."}
           </p>
         </div>
 
@@ -112,18 +130,39 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
             <select
               value={selectedServiceId}
               onChange={(e) => {
-                setSelectedServiceId(e.target.value);
-                setQuantity(e.target.value === 'saisie-texte' ? 55 : 3);
+                const newId = e.target.value;
+                setSelectedServiceId(newId);
+                if (isAdministrativeService(newId)) {
+                  setQuantity(1);
+                  setSelectedTurnaround(ADMINISTRATIVE_LOCKED_TURNAROUND);
+                } else {
+                  setQuantity(newId === 'saisie-texte' ? 55 : 3);
+                }
               }}
               className="w-full p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-600 focus:outline-none"
             >
               {SERVICES_DATA.map((s) => (
                 <option key={s.id} value={s.id} className="dark:bg-slate-800">
-                  {s.name} — Tarif de base : {s.priceDisplay}
+                  {s.name} — Tarif : {s.priceDisplay}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Administrative notice box if administrative service is chosen */}
+          {isAdministrative && (
+            <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border-2 border-[#FF5E14] text-xs text-orange-950 dark:text-orange-200 space-y-2">
+              <div className="flex items-center space-x-2 font-bold text-[#FF5E14] dark:text-orange-300">
+                <Scale className="w-4 h-4" />
+                <span>Réglementation Judiciaire (Casier & Nationalité)</span>
+              </div>
+              <ul className="list-disc pl-4 space-y-1 text-slate-700 dark:text-slate-300 text-[11px]">
+                <li><strong>Paiement obligatoire :</strong> Nécessaire à l'enregistrement pour le règlement des timbres fiscaux d'État.</li>
+                <li><strong>Reçu immédiat :</strong> Vous recevez votre reçu officiel de demande et de transaction dès validation du règlement.</li>
+                <li><strong>Retrait sous 72h :</strong> Le retrait du document physique signé s'effectue au tribunal exactement 3 jours ouvrés après la demande.</li>
+              </ul>
+            </div>
+          )}
 
           {/* Step 2: Quantity slider & Presets */}
           <div className="space-y-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
@@ -177,13 +216,18 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
           {/* Step 3: Turnaround Delay Checkboxes */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-              3. Choisissez le délai souhaité (Cases à cocher)
+              3. {isAdministrative ? "Délai légal réglementaire (Verrouillé 72h)" : "Choisissez le délai souhaité (Cases à cocher)"}
             </label>
             <TurnaroundSelector
               selectedId={selectedTurnaround.id}
-              onSelect={(opt) => setSelectedTurnaround(opt)}
-              title="Délai de réalisation"
-              subtitle="Cochez le délai correspondant à vos impératifs horaires :"
+              onSelect={(opt) => {
+                if (!isAdministrative) {
+                  setSelectedTurnaround(opt);
+                }
+              }}
+              title={isAdministrative ? "Délai légal de traitement" : "Délai de réalisation"}
+              subtitle={isAdministrative ? "Délai fixé par la juridiction compétente :" : "Cochez le délai correspondant à vos impératifs horaires :"}
+              isAdministrativeLocked={isAdministrative}
             />
           </div>
 
@@ -201,7 +245,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left">
               <div>
-                <span className="text-[11px] text-slate-400 block font-medium">Prix unitaire calculé</span>
+                <span className="text-[11px] text-slate-400 block font-medium">Prix unitaire</span>
                 <span className="text-xl font-bold text-slate-100 font-['Outfit']">
                   {formatFCFA(unitPrice)}
                 </span>
@@ -213,11 +257,13 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
                 <span className="text-xl font-bold text-slate-100 font-['Outfit']">
                   {quantity} {selectedService.unitLabel}
                 </span>
-                <span className="text-[10px] text-slate-400 block">à traiter</span>
+                <span className="text-[10px] text-slate-400 block">{isAdministrative ? 'dossier(s)' : 'à traiter'}</span>
               </div>
 
               <div className="sm:text-right">
-                <span className="text-[11px] text-amber-300 block font-bold">MONTANT À RÉGLER À LA LIVRAISON</span>
+                <span className="text-[11px] text-amber-300 block font-bold">
+                  {isAdministrative ? "MONTANT TOTAL DE LA DEMANDE" : "MONTANT À RÉGLER À LA LIVRAISON"}
+                </span>
                 <span className="text-2xl sm:text-3xl font-black text-amber-400 font-['Outfit']">
                   {formatFCFA(totalPrice)}
                 </span>
@@ -259,7 +305,7 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
             className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition-colors whitespace-nowrap"
           >
             <MessageSquare className="w-4 h-4" />
-            <span>Valider la commande sur WhatsApp</span>
+            <span>{isAdministrative ? "Valider la démarche sur WhatsApp" : "Valider la commande sur WhatsApp"}</span>
           </a>
 
         </div>

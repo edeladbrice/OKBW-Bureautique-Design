@@ -33,6 +33,12 @@ export interface ServiceItem {
   icon: string;
   deliveryTime: string;
   recommended?: boolean;
+  isAdministrative?: boolean;
+  administrativeTimeline?: {
+    receiptDelay: string;
+    documentDelay: string;
+    paymentRequirement: string;
+  };
 }
 
 export interface UploadedFile {

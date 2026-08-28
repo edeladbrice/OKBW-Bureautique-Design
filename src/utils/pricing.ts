@@ -50,25 +50,68 @@ export const PRIMARY_WHATSAPP_NUMBER = '2250141752403';
 export const SECONDARY_CONTACT_NUMBER = '+225 01 40 01 88 31';
 export const DISPLAY_CONTACTS = '+225 01 41 75 24 03 / +225 01 40 01 88 31';
 
+export const ADMIN_SERVICE_IDS = [
+  'certificat-nationalite',
+  'casier-judiciaire',
+  'pack-nationalite-casier'
+];
+
+export function isAdministrativeService(serviceOrId: ServiceItem | string): boolean {
+  if (typeof serviceOrId === 'string') {
+    return ADMIN_SERVICE_IDS.includes(serviceOrId);
+  }
+  return serviceOrId.category === 'administratif' || ADMIN_SERVICE_IDS.includes(serviceOrId.id);
+}
+
+export function hasAdministrativeService(cart: CartItem[]): boolean {
+  return cart.some(item => isAdministrativeService(item.service));
+}
+
+export const ADMINISTRATIVE_LOCKED_TURNAROUND: TurnaroundOption = {
+  id: 'admin-legal-72h',
+  label: 'Délai Légal Greffe / Tribunal (72h / 3 Jours)',
+  hoursDetail: '72h ouvrées (3 jours) • Reçu immédiat dès paiement',
+  badge: '⚖️ 72h Délai Greffe',
+  description: 'Reçu officiel de demande et transaction transmis immédiatement dès le paiement. Retrait du document physique 3 jours après la demande au tribunal.',
+  recommended: true
+};
+
 export function buildWhatsAppFormattedMessage(params: {
   serviceName: string;
   quantityText: string;
   customerName?: string;
   instructions?: string;
   totalAmount: number;
+  isAdministrative?: boolean;
 }): string {
   const name = params.customerName?.trim() ? params.customerName.trim() : 'Non renseigné';
   const instructions = params.instructions?.trim() ? params.instructions.trim() : 'Prestation standard';
 
   let message = `Bonjour OKBW Bureautique & Design !\n`;
-  message += `Je souhaite passer une commande :\n\n`;
-  message += `• Service : ${params.serviceName}\n`;
-  message += `• Quantité / Pages : ${params.quantityText}\n`;
-  message += `• Nom du client : ${name}\n`;
-  message += `• Instructions : ${instructions}\n`;
-  message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
-  message += `Je vous joins mes fichiers ci-dessous dans cette discussion. \n`;
-  message += `(J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).\n\n`;
+
+  if (params.isAdministrative) {
+    message += `Je souhaite effectuer une démarche administrative / judiciaire :\n\n`;
+    message += `• Acte demandé : ${params.serviceName}\n`;
+    message += `• Quantité / Dossiers : ${params.quantityText}\n`;
+    message += `• Nom du demandeur : ${name}\n`;
+    message += `• Précisions / Mentions : ${instructions}\n`;
+    message += `• Montant total de la demande : ${formatFCFA(params.totalAmount)}\n\n`;
+    message += `⚖️ RAPPEL DES CONDITIONS & DÉLAIS OFFICIELS :\n`;
+    message += `1. Paiement obligatoire pour engager la demande et régler les timbres fiscaux & greffe.\n`;
+    message += `2. Reçu officiel de demande et transaction transmis IMMÉDIATEMENT dès confirmation du paiement.\n`;
+    message += `3. Retrait et délivrance du document officiel sous 72h (3 jours ouvrés après la demande).\n\n`;
+    message += `Je vous transmets mes pièces justificatives ci-dessous dans cette discussion pour initier le traitement.\n\n`;
+  } else {
+    message += `Je souhaite passer une commande :\n\n`;
+    message += `• Service : ${params.serviceName}\n`;
+    message += `• Quantité / Pages : ${params.quantityText}\n`;
+    message += `• Nom du client : ${name}\n`;
+    message += `• Instructions : ${instructions}\n`;
+    message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
+    message += `Je vous joins mes fichiers ci-dessous dans cette discussion. \n`;
+    message += `(J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).\n\n`;
+  }
+
   message += `---\n`;
   message += `Contacts : ${DISPLAY_CONTACTS}`;
 
@@ -221,12 +264,15 @@ export function generateWhatsAppOrderLink(
 
   const instructions = detailsList.length > 0 ? detailsList.join(' | ') : 'Prestation standard';
 
+  const isAdministrative = hasAdministrativeService(cart);
+
   const message = buildWhatsAppFormattedMessage({
     serviceName,
     quantityText,
     customerName: customerInfo?.name,
     instructions,
-    totalAmount
+    totalAmount,
+    isAdministrative
   });
 
   return `https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -240,6 +286,7 @@ export function generateQuickServiceWhatsAppLink(
   turnaround?: TurnaroundOption
 ): string {
   const { totalPrice } = calculateServicePrice(service, quantity);
+  const isAdministrative = isAdministrativeService(service);
   
   const detailsParts: string[] = [];
   if (turnaround) {
@@ -255,7 +302,8 @@ export function generateQuickServiceWhatsAppLink(
     quantityText: `${quantity} (${service.unitLabel})`,
     customerName,
     instructions,
-    totalAmount: totalPrice
+    totalAmount: totalPrice,
+    isAdministrative
   });
 
   return `https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;

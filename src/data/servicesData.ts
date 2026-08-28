@@ -396,8 +396,14 @@ export const SERVICES_DATA: ServiceItem[] = [
     priceDisplay: '3 500 F',
     unitLabel: 'par certificat',
     targetAudience: 'Personne de nationalité ivoirienne née de parents ivoiriens (père ou mère)',
-    description: 'Assistance, constitution et traitement dématérialisé de votre demande officielle de Certificat de Nationalité Ivoirienne auprès de la juridiction compétente. Service rapide, fiable et sécurisé.',
-    promoNote: '👉 Tarif officiel fixé à 3 500 F pour personne de nationalité ivoirienne et de parents ivoiriens.',
+    description: 'Assistance, constitution et traitement dématérialisé de votre demande officielle de Certificat de Nationalité Ivoirienne auprès de la juridiction compétente. Paiement requis pour enregistrement : vous recevez immédiatement votre reçu officiel de demande & transaction, et le retrait du document authentifié s\'effectue 3 jours (72h) après la demande.',
+    promoNote: '⚖️ Procédure Légale : Reçu officiel immédiat dès paiement • Retrait du document physique 3 jours (72h) après la demande au tribunal.',
+    isAdministrative: true,
+    administrativeTimeline: {
+      receiptDelay: 'Immédiat dès la confirmation du paiement',
+      documentDelay: '3 jours (72h ouvrées) après la soumission au tribunal',
+      paymentRequirement: 'Paiement requis à l\'enregistrement pour acquitter les timbres fiscaux officiels'
+    },
     requiredDocuments: [
       'Extrait d\'acte de naissance ou copie intégrale du demandeur (de préférence récent)',
       'Photocopie de la CNI / Passeport / Attestation d\'identité du demandeur (si majeur)',
@@ -406,15 +412,15 @@ export const SERVICES_DATA: ServiceItem[] = [
       'Justificatif de résidence / domicile actuel'
     ],
     inclusions: [
-      'Audit préalable et contrôle rigoureux de conformité de vos pièces',
+      'Paiement préalable des timbres fiscaux et droits de greffe officiels',
+      'Émission & transmission IMMÉDIATE du Reçu officiel de demande et de transaction',
       'Saisie et soumission officielle auprès du tribunal territorialement compétent',
       'Suivi régulier du dossier jusqu\'à signature par le magistrat',
-      'Envoi immédiat du document officiel scanné en Haute Résolution (PDF HD)',
-      'Mise à disposition ou expédition sécurisée du document physique original'
+      'Retrait au greffe à J+3 (72h) & Envoi du scan HD + mise à disposition de l\'original'
     ],
-    badge: 'Démarche Officielle',
+    badge: '⚖️ 72h Tribunal • Reçu Immédiat',
     icon: 'ShieldCheck',
-    deliveryTime: '48h à 72h ouvrées (Procédure Tribunal)',
+    deliveryTime: '72h strictes (3 jours) • Reçu immédiat dès paiement',
     recommended: true
   },
   {
@@ -425,8 +431,14 @@ export const SERVICES_DATA: ServiceItem[] = [
     priceDisplay: '3 500 F',
     unitLabel: 'par extrait',
     targetAudience: 'Personne de nationalité ivoirienne et de parents ivoiriens',
-    description: 'Traitement accéléré de votre demande d\'extrait de casier judiciaire (Bulletin N°3) auprès du greffe du tribunal de votre lieu de naissance en Côte d\'Ivoire. Idéal pour concours, embauches, visas et dossiers administratifs.',
-    promoNote: '👉 Tarif 3 500 F incluant timbres fiscaux, droits de chancellerie et suivi de greffe.',
+    description: 'Traitement officiel de votre demande d\'extrait de casier judiciaire (Bulletin N°3) auprès du greffe du tribunal de votre lieu de naissance. Le paiement est requis pour engager la demande et acheter les timbres fiscaux : vous recevez immédiatement votre reçu de demande & transaction, et le retrait du casier judiciaire physique s\'effectue 3 jours (72h) après la demande.',
+    promoNote: '⚖️ Procédure Légale : Reçu officiel immédiat dès paiement • Retrait du casier judiciaire 3 jours (72h) après la demande au tribunal.',
+    isAdministrative: true,
+    administrativeTimeline: {
+      receiptDelay: 'Immédiat dès la confirmation du paiement',
+      documentDelay: '3 jours (72h ouvrées) après enregistrement au greffe',
+      paymentRequirement: 'Paiement requis à l\'enregistrement pour acquitter les droits de chancellerie & timbres'
+    },
     requiredDocuments: [
       'Extrait d\'acte de naissance ou copie d\'acte d\'état civil conforme',
       'Photocopie recto/verso de la Carte Nationale d\'Identité (CNI) ou du Passeport valide',
@@ -434,15 +446,15 @@ export const SERVICES_DATA: ServiceItem[] = [
       'Précision exacte du lieu, de la date de naissance et de la juridiction compétente'
     ],
     inclusions: [
-      'Vérification légale des mentions d\'état civil',
-      'Paiement des droits de chancellerie et timbres fiscaux officiels',
-      'Dépôt physique et enregistrement au greffe du tribunal compétent',
-      'Retrait prioritaire par notre service d\'assistance',
-      'Transmission express de la version numérisée HD + original certifié conforme'
+      'Paiement des droits de chancellerie et timbres fiscaux officiels au greffe',
+      'Transmission IMMÉDIATE du Reçu officiel de demande et de transaction de paiement',
+      'Dépôt physique et enregistrement légal au greffe du tribunal compétent',
+      'Retrait officiel du document par notre service d\'assistance 3 jours (72h) après la demande',
+      'Transmission express de la version numérisée HD certifiée + original papier'
     ],
-    badge: 'Spécial Concours & Emploi',
+    badge: '⚖️ 72h Tribunal • Reçu Immédiat',
     icon: 'FileCheck2',
-    deliveryTime: '48h à 72h ouvrées',
+    deliveryTime: '72h strictes (3 jours) • Reçu immédiat dès paiement',
     recommended: true
   },
   {
@@ -453,8 +465,14 @@ export const SERVICES_DATA: ServiceItem[] = [
     priceDisplay: '6 500 F',
     unitLabel: 'pack 2 documents',
     targetAudience: 'Candidats aux concours (ENA, CAFOP, Police, Douanes...) et demandeurs d\'emploi ivoiriens',
-    description: 'Formule combinée économique regroupant le Certificat de Nationalité et le Casier Judiciaire (Bulletin N°3). Traitement simultané prioritaire pour constitution rapide de dossiers de concours administratifs ou d\'embauche.',
-    promoNote: '👉 Économisez 500 F : 6 500 F au lieu de 7 000 F pour les deux actes réunis.',
+    description: 'Formule combinée économique regroupant le Certificat de Nationalité et le Casier Judiciaire (Bulletin N°3). Le règlement préalable permet l\'achat simultané des timbres fiscaux : vous recevez immédiatement votre reçu de demande & transaction, et le retrait des 2 documents originaux s\'effectue sous 72h (3 jours ouvrés) au greffe.',
+    promoNote: '👉 Économisez 500 F (6 500 F au lieu de 7 000 F) • Reçu immédiat dès paiement • Retrait sous 72h (3 jours).',
+    isAdministrative: true,
+    administrativeTimeline: {
+      receiptDelay: 'Immédiat dès la confirmation du paiement',
+      documentDelay: '3 jours (72h ouvrées) après enregistrement simultané',
+      paymentRequirement: 'Paiement requis à l\'enregistrement pour acquitter les timbres fiscaux des 2 actes'
+    },
     requiredDocuments: [
       'Extrait d\'acte de naissance ou copie intégrale récente',
       'Photocopie de la CNI / Passeport en cours de validité',
@@ -464,12 +482,13 @@ export const SERVICES_DATA: ServiceItem[] = [
     inclusions: [
       'Prise en charge intégrale des deux démarches administratives simultanément',
       'Paiement groupé des timbres fiscaux et droits de greffe',
+      'Transmission IMMÉDIATE du Reçu officiel de demande et transaction pour chaque acte',
       'Contrôle anti-rejet spécial dossiers de concours d\'État',
-      'Expédition groupée des 2 documents scannés HD + originaux'
+      'Retrait au tribunal à J+3 (72h) & Expédition groupée des 2 scans HD + originaux'
     ],
-    badge: 'Pack Économique -500 F',
+    badge: 'Pack Économique 72h',
     icon: 'Layers',
-    deliveryTime: '48h à 72h ouvrées',
+    deliveryTime: '72h strictes (3 jours) • Reçu immédiat dès paiement',
     recommended: true
   }
 ];
