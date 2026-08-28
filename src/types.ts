@@ -104,6 +104,7 @@ export interface ContactInfo {
   secondaryPhone: string;
   displayContacts: string;
   whatsappUrl: string;
+  wavePaymentUrl?: string;
   email: string;
   location: string;
   hours: string;

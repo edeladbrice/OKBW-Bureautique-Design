@@ -149,8 +149,21 @@ export const PaymentIntegrationsSection: React.FC = () => {
                   <span>Déroulement du paiement :</span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  À la fin de la réalisation de votre document, notre équipe vous envoie un <strong>aperçu sécurisé</strong> ainsi que le <strong>lien de paiement Wave / Mobile Money officiel</strong> dans votre conversation WhatsApp pour débloquer votre livraison HD finale.
+                  À la fin de la réalisation de votre document, notre équipe vous envoie un <strong>aperçu sécurisé</strong> ainsi que le <strong>lien de paiement Wave Business pré-configuré</strong> dans votre conversation WhatsApp pour débloquer votre livraison HD finale.
                 </p>
+                <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400">Lien marchand officiel :</span>
+                  <a
+                    id="wave-official-merchant-link"
+                    href={CONTACT_INFO.wavePaymentUrl || "https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold text-sky-400 hover:text-sky-300 underline inline-flex items-center space-x-1"
+                  >
+                    <span>Lien Wave Business</span>
+                    <Sparkles className="w-3 h-3 ml-0.5" />
+                  </a>
+                </div>
               </div>
 
               <div className="space-y-2 text-xs text-slate-300">

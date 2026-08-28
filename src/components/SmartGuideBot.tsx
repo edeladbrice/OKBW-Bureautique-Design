@@ -44,8 +44,7 @@ import {
   ADMINISTRATIVE_LOCKED_TURNAROUND, 
   isAdministrativeService,
   buildWhatsAppFormattedMessage,
-  PRIMARY_WHATSAPP_NUMBER,
-  DISPLAY_CONTACTS
+  PRIMARY_WHATSAPP_NUMBER
 } from '../utils/pricing';
 import { 
   BotMessage, 

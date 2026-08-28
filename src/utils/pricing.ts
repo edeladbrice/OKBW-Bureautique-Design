@@ -49,6 +49,14 @@ export const TURNAROUND_OPTIONS: TurnaroundOption[] = [
 export const PRIMARY_WHATSAPP_NUMBER = '2250141752403';
 export const SECONDARY_CONTACT_NUMBER = '+225 01 40 01 88 31';
 export const DISPLAY_CONTACTS = '+225 01 41 75 24 03 / +225 01 40 01 88 31';
+export const WAVE_PAYMENT_URL = 'https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/';
+
+export function getWavePaymentUrl(amount?: number): string {
+  if (amount && amount > 0) {
+    return `https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/?amount=${Math.round(amount)}`;
+  }
+  return WAVE_PAYMENT_URL;
+}
 
 export const ADMIN_SERVICE_IDS = [
   'certificat-nationalite',
@@ -98,15 +106,12 @@ export function buildWhatsAppFormattedMessage(params: {
     message += `• Montant total : ${formatFCFA(params.totalAmount)}\n`;
     message += `• Modalité : Règlement à l'enregistrement (Timbres fiscaux & greffe) • Reçu officiel immédiat dès paiement • Retrait physique sous 72h\n\n`;
     message += `Je vous joins les photos/scans de mes pièces justificatives ci-dessous dans cette discussion.\n`;
-    message += `(J'attends la confirmation de la commande pour recevoir le lien de paiement Wave Business).\n\n`;
+    message += `(J'attends la confirmation de la commande pour recevoir le lien de paiement Wave Business).`;
   } else {
     message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
     message += `Je vous joins mes fichiers ci-dessous dans cette discussion.\n`;
-    message += `(J'attends la finalisation du travail pour recevoir le lien de paiement Wave Business).\n\n`;
+    message += `(J'attends la finalisation du travail pour recevoir le lien de paiement Wave Business).`;
   }
-  
-  message += `---\n`;
-  message += `Contacts : ${DISPLAY_CONTACTS}`;
 
   return message;
 }

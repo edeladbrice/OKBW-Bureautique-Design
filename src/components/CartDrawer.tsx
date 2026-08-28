@@ -29,8 +29,7 @@ import {
   generateWhatsAppOrderLink, 
   TURNAROUND_OPTIONS,
   ADMINISTRATIVE_LOCKED_TURNAROUND,
-  hasAdministrativeService,
-  DISPLAY_CONTACTS
+  hasAdministrativeService
 } from '../utils/pricing';
 import { TurnaroundSelector } from './TurnaroundSelector';
 
@@ -354,10 +353,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             (J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).
                           </p>
                         )}
-
-                        <p className="text-[10px] text-slate-500 dark:text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">
-                          Contacts : {DISPLAY_CONTACTS}
-                        </p>
                       </div>
                     </div>
 
