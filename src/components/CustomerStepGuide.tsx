@@ -20,11 +20,13 @@ import { CONTACT_INFO } from '../data/servicesData';
 interface CustomerStepGuideProps {
   onExploreCatalog: () => void;
   onOpenCalculator: () => void;
+  onOpenGuideBot?: () => void;
 }
 
 export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
   onExploreCatalog,
-  onOpenCalculator
+  onOpenCalculator,
+  onOpenGuideBot
 }) => {
   const [activeStep, setActiveStep] = useState<number>(0);
 
@@ -149,6 +151,19 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
             De la sélection de votre prestation à la réception de vos documents finaux : un processus 100% transparent et guidé en 4 étapes simples.
           </p>
+
+          {onOpenGuideBot && (
+            <div className="pt-2">
+              <button
+                onClick={onOpenGuideBot}
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#0F52BA] via-blue-600 to-[#FF5E14] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 transition-all"
+              >
+                <span>🤖</span>
+                <span>Lancer le Guide Intelligent Interactif</span>
+                <Sparkles className="w-4 h-4 text-amber-300" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Interactive Step Navigator Pills (Desktop & Tablet) */}

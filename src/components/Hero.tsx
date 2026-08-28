@@ -24,12 +24,14 @@ interface HeroProps {
   onOpenCalculator: () => void;
   onExploreServices: () => void;
   onOpenAdminGuide?: () => void;
+  onOpenGuideBot?: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ 
   onOpenCalculator, 
   onExploreServices,
-  onOpenAdminGuide 
+  onOpenAdminGuide,
+  onOpenGuideBot
 }) => {
   return (
     <section 
@@ -107,6 +109,17 @@ export const Hero: React.FC<HeroProps> = ({
                   <span>Voir le Catalogue</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
+
+                {onOpenGuideBot ? (
+                  <button
+                    id="hero-bento-bot-btn"
+                    onClick={onOpenGuideBot}
+                    className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-5 sm:px-6 py-3 rounded-2xl font-extrabold text-sm backdrop-blur-sm transition-all flex items-center space-x-2"
+                  >
+                    <span className="text-amber-300 font-black">🤖</span>
+                    <span>Guide Intelligent</span>
+                  </button>
+                ) : null}
 
                 <button
                   id="hero-bento-calc-btn"

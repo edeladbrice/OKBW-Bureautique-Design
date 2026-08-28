@@ -13,6 +13,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { FloatingContact } from './components/FloatingContact';
 import { Footer } from './components/Footer';
 import { AdminGuideModal } from './components/AdminGuideModal';
+import { SmartGuideBot } from './components/SmartGuideBot';
 import { CartItem, ServiceItem, UploadedFile } from './types';
 import { calculateServicePrice } from './utils/pricing';
 
@@ -39,6 +40,7 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isAdminGuideOpen, setIsAdminGuideOpen] = useState(false);
+  const [isBotOpen, setIsBotOpen] = useState(false);
   const [selectedServiceForModal, setSelectedServiceForModal] = useState<ServiceItem | null>(null);
 
   // Sync theme class to html element
@@ -174,6 +176,7 @@ export default function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
+        onOpenGuideBot={() => setIsBotOpen(true)}
       />
 
       {/* Main Content Sections */}
@@ -183,12 +186,14 @@ export default function App() {
           onOpenCalculator={() => setIsCalculatorOpen(true)}
           onExploreServices={scrollToCatalog}
           onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
+          onOpenGuideBot={() => setIsBotOpen(true)}
         />
 
         {/* Visual Step-by-Step Customer Guide (Orienting Clients) */}
         <CustomerStepGuide
           onExploreCatalog={scrollToCatalog}
           onOpenCalculator={() => setIsCalculatorOpen(true)}
+          onOpenGuideBot={() => setIsBotOpen(true)}
         />
 
         {/* E-commerce Services Catalog & Ordering */}
@@ -220,6 +225,27 @@ export default function App() {
 
       {/* Modals and Slide-Overs */}
       
+      {/* Smart Intelligent Step-by-Step Guide Bot (100% Zero-API) */}
+      <SmartGuideBot
+        isOpen={isBotOpen}
+        onClose={() => setIsBotOpen(false)}
+        onOpenServiceModal={(service) => {
+          setIsBotOpen(false);
+          setSelectedServiceForModal(service);
+        }}
+        onOpenCalculatorModal={(serviceId) => {
+          setIsBotOpen(false);
+          setIsCalculatorOpen(true);
+        }}
+        onAddToCart={(service, quantity, notes) => {
+          handleAddToCart(service, quantity, undefined, undefined, notes);
+        }}
+        onScrollToCatalog={() => {
+          setIsBotOpen(false);
+          scrollToCatalog();
+        }}
+      />
+
       {/* Service Detail & Custom Order Modal */}
       <ServiceDetailModal
         service={selectedServiceForModal}
@@ -251,11 +277,12 @@ export default function App() {
         onClose={() => setIsAdminGuideOpen(false)}
       />
 
-      {/* Floating WhatsApp, Cart and Quick Guide buttons */}
+      {/* Floating WhatsApp, Cart, Guide Bot and Quick Guide buttons */}
       <FloatingContact
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
+        onOpenGuideBot={() => setIsBotOpen(true)}
       />
 
     </div>

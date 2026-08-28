@@ -21,6 +21,7 @@ interface NavbarProps {
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
   onOpenAdminGuide?: () => void;
+  onOpenGuideBot?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -29,7 +30,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCalculator,
   theme = 'light',
   onToggleTheme,
-  onOpenAdminGuide
+  onOpenAdminGuide,
+  onOpenGuideBot
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -151,6 +153,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
+            {/* Smart Guide Bot CTA */}
+            {onOpenGuideBot && (
+              <button
+                id="nav-guide-bot-btn"
+                onClick={onOpenGuideBot}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-extrabold bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-[#0F52BA] dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition-all shadow-sm"
+                title="Ouvrir le Guide Intelligent Pas à Pas"
+              >
+                <span className="text-amber-500 font-black">🤖</span>
+                <span>Guide Pas-à-Pas</span>
+              </button>
+            )}
+
             {/* Express Price Calculator CTA */}
             <button
               id="nav-calc-btn"
@@ -257,7 +272,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              {onOpenGuideBot && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenGuideBot();
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-3 rounded-xl text-xs font-extrabold bg-blue-50 dark:bg-blue-950/60 text-[#0F52BA] dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                >
+                  <span className="text-amber-500 font-bold">🤖</span>
+                  <span>Guide Intelligent Pas-à-Pas</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
