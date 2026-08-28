@@ -84,12 +84,22 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminGuide }) => {
             </div>
           </div>
 
-          {/* Col 2: Services Bureautique & PDF */}
+          {/* Col 2: Services Bureautique & Actes */}
           <div className="lg:col-span-3 space-y-3 text-xs">
             <h4 className="text-sm font-bold text-slate-100 font-['Outfit'] uppercase tracking-wider text-[#FF5E14]">
-              Bureautique & PDF
+              Bureautique & Actes 🇨🇮
             </h4>
             <ul className="space-y-2 text-slate-400">
+              <li>
+                <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors font-semibold text-orange-200">
+                  • Certificat de Nationalité Ivoirienne (3 500 F)
+                </a>
+              </li>
+              <li>
+                <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors font-semibold text-orange-200">
+                  • Casier Judiciaire Bulletin N°3 (3 500 F)
+                </a>
+              </li>
               <li>
                 <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors">
                   • CV Professionnel + Costume virtuel (1 000 F)
@@ -97,22 +107,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminGuide }) => {
               </li>
               <li>
                 <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors">
-                  • CV Standard rapide (500 F)
-                </a>
-              </li>
-              <li>
-                <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors">
                   • Saisie de mémoires & thèses (dès 200 F/p)
-                </a>
-              </li>
-              <li>
-                <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors">
-                  • Lettres de motivation & administratives (500 F)
-                </a>
-              </li>
-              <li>
-                <a href="#catalogue" className="hover:text-[#FF5E14] transition-colors">
-                  • Diaporama PowerPoint de soutenance (2 500 F)
                 </a>
               </li>
               <li>

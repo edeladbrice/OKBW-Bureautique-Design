@@ -1,8 +1,8 @@
 import { ServiceItem, ContactInfo } from '../types';
 
 export const CONTACT_INFO: ContactInfo = {
-  whatsappNumber: '+225 05 01 08 86 08',
-  whatsappUrl: 'https://wa.me/2250501088608',
+  whatsappNumber: '+225 01 41 75 24 03',
+  whatsappUrl: 'https://wa.me/2250141752403',
   wavePaymentUrl: 'https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/',
   email: 'contact@okbw-design.ci',
   location: 'Abidjan, Côte d\'Ivoire & Services à distance 24/7',
@@ -384,5 +384,91 @@ export const SERVICES_DATA: ServiceItem[] = [
     badge: 'Grand Compte & PME',
     icon: 'Cpu',
     deliveryTime: 'Sur étude du cahier des charges'
+  },
+
+  // 6. E-SERVICES ADMINISTRATIFS & JUSTICE EN LIGNE
+  {
+    id: 'certificat-nationalite',
+    name: 'Demande de Certificat de Nationalité Ivoirienne en Ligne',
+    category: 'administratif',
+    basePrice: 3500,
+    priceDisplay: '3 500 F',
+    unitLabel: 'par certificat',
+    targetAudience: 'Personne de nationalité ivoirienne née de parents ivoiriens (père ou mère)',
+    description: 'Assistance, constitution et traitement dématérialisé de votre demande officielle de Certificat de Nationalité Ivoirienne auprès de la juridiction compétente. Service rapide, fiable et sécurisé.',
+    promoNote: '👉 Tarif officiel fixé à 3 500 F pour personne de nationalité ivoirienne et de parents ivoiriens.',
+    requiredDocuments: [
+      'Extrait d\'acte de naissance ou copie intégrale du demandeur (de préférence récent)',
+      'Photocopie de la CNI / Passeport / Attestation d\'identité du demandeur (si majeur)',
+      'Certificat de nationalité ivoirienne du père OU de la mère (ou copie CNI / acte de naissance du parent ivoirien)',
+      'Une (1) photo d\'identité couleur récente sur fond blanc net',
+      'Justificatif de résidence / domicile actuel'
+    ],
+    inclusions: [
+      'Audit préalable et contrôle rigoureux de conformité de vos pièces',
+      'Saisie et soumission officielle auprès du tribunal territorialement compétent',
+      'Suivi régulier du dossier jusqu\'à signature par le magistrat',
+      'Envoi immédiat du document officiel scanné en Haute Résolution (PDF HD)',
+      'Mise à disposition ou expédition sécurisée du document physique original'
+    ],
+    badge: 'Démarche Officielle',
+    icon: 'ShieldCheck',
+    deliveryTime: '48h à 72h ouvrées (Procédure Tribunal)',
+    recommended: true
+  },
+  {
+    id: 'casier-judiciaire',
+    name: 'Demande d\'Extrait de Casier Judiciaire (Bulletin N°3) en Ligne',
+    category: 'administratif',
+    basePrice: 3500,
+    priceDisplay: '3 500 F',
+    unitLabel: 'par extrait',
+    targetAudience: 'Personne de nationalité ivoirienne et de parents ivoiriens',
+    description: 'Traitement accéléré de votre demande d\'extrait de casier judiciaire (Bulletin N°3) auprès du greffe du tribunal de votre lieu de naissance en Côte d\'Ivoire. Idéal pour concours, embauches, visas et dossiers administratifs.',
+    promoNote: '👉 Tarif 3 500 F incluant timbres fiscaux, droits de chancellerie et suivi de greffe.',
+    requiredDocuments: [
+      'Extrait d\'acte de naissance ou copie d\'acte d\'état civil conforme',
+      'Photocopie recto/verso de la Carte Nationale d\'Identité (CNI) ou du Passeport valide',
+      'Certificat de nationalité ivoirienne (si requis selon la juridiction de naissance)',
+      'Précision exacte du lieu, de la date de naissance et de la juridiction compétente'
+    ],
+    inclusions: [
+      'Vérification légale des mentions d\'état civil',
+      'Paiement des droits de chancellerie et timbres fiscaux officiels',
+      'Dépôt physique et enregistrement au greffe du tribunal compétent',
+      'Retrait prioritaire par notre service d\'assistance',
+      'Transmission express de la version numérisée HD + original certifié conforme'
+    ],
+    badge: 'Spécial Concours & Emploi',
+    icon: 'FileCheck2',
+    deliveryTime: '48h à 72h ouvrées',
+    recommended: true
+  },
+  {
+    id: 'pack-nationalite-casier',
+    name: 'Pack Duo : Nationalité Ivoirienne + Casier Judiciaire',
+    category: 'administratif',
+    basePrice: 6500,
+    priceDisplay: '6 500 F',
+    unitLabel: 'pack 2 documents',
+    targetAudience: 'Candidats aux concours (ENA, CAFOP, Police, Douanes...) et demandeurs d\'emploi ivoiriens',
+    description: 'Formule combinée économique regroupant le Certificat de Nationalité et le Casier Judiciaire (Bulletin N°3). Traitement simultané prioritaire pour constitution rapide de dossiers de concours administratifs ou d\'embauche.',
+    promoNote: '👉 Économisez 500 F : 6 500 F au lieu de 7 000 F pour les deux actes réunis.',
+    requiredDocuments: [
+      'Extrait d\'acte de naissance ou copie intégrale récente',
+      'Photocopie de la CNI / Passeport en cours de validité',
+      'Pièce d\'identité ou Certificat de nationalité du père ou de la mère',
+      'Deux (2) photos d\'identité récentes sur fond blanc'
+    ],
+    inclusions: [
+      'Prise en charge intégrale des deux démarches administratives simultanément',
+      'Paiement groupé des timbres fiscaux et droits de greffe',
+      'Contrôle anti-rejet spécial dossiers de concours d\'État',
+      'Expédition groupée des 2 documents scannés HD + originaux'
+    ],
+    badge: 'Pack Économique -500 F',
+    icon: 'Layers',
+    deliveryTime: '48h à 72h ouvrées',
+    recommended: true
   }
 ];

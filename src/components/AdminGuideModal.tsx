@@ -251,14 +251,14 @@ export const AdminGuideModal: React.FC<AdminGuideModalProps> = ({ isOpen, onClos
                   </p>
 
                   <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300/80 dark:border-emerald-700/50 font-mono text-[11px] text-slate-800 dark:text-slate-200 space-y-1">
-                    <p className="font-bold text-emerald-700 dark:text-emerald-400">✨ NOUVELLE COMMANDE OKBW ✨</p>
-                    <p>📦 <strong>Prestation :</strong> Saisie de texte & Mise en page</p>
-                    <p>🔢 <strong>Quantité :</strong> 55 pages (Tarif Dégressif)</p>
-                    <p>💰 <strong>Montant Verrouillé :</strong> 11 000 FCFA</p>
-                    <p>⏱️ <strong>Délai (Coché) :</strong> Express Journée (&lt; 12 Heures)</p>
-                    <p>📎 <strong>Fichiers exemplaires joints :</strong> manuscrit_chapitre1.docx, modele_mise_en_page.pdf</p>
-                    <p>🔒 <strong>Lien Wave avec montant instancié :</strong> {CONTACT_INFO.wavePaymentUrl}?amount=11000&currency=XOF</p>
-                    <p className="text-slate-500 pt-1">"Le client clique sur le lien Wave où 11 000 F est déjà pré-rempli sans risque d'erreur !"</p>
+                    <p className="font-bold text-emerald-700 dark:text-emerald-400">Bonjour OKBW Bureautique & Design !</p>
+                    <p>Je souhaite passer une commande :</p>
+                    <p>- <strong>Service :</strong> Saisie de texte & Mise en page</p>
+                    <p>- <strong>Quantité / Pages :</strong> 55 pages</p>
+                    <p>- <strong>Nom du client :</strong> M. Kouassi</p>
+                    <p>- <strong>Détails / Instructions :</strong> Mémoire de fin d'études avec pagination</p>
+                    <p>- <strong>Montant estimé :</strong> 11 000 F CFA</p>
+                    <p className="text-slate-500 pt-1">"Je vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !"</p>
                   </div>
                 </div>
 

@@ -3,17 +3,15 @@ import {
   UploadCloud, 
   FileText, 
   Image as ImageIcon, 
-  FileCheck, 
   Trash2, 
   Plus, 
   Paperclip,
-  CheckCircle2,
-  FileCode,
-  FileSpreadsheet,
-  File,
-  MessageSquare,
-  Sparkles,
-  Info
+  CheckCircle2, 
+  FileSpreadsheet, 
+  File, 
+  Sparkles, 
+  Info,
+  Check
 } from 'lucide-react';
 import { UploadedFile } from '../types';
 import { formatFileSize } from '../utils/pricing';
@@ -30,54 +28,52 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
   files,
   onFilesChange,
   maxFiles = 5,
-  label = "Fichiers exemplaires du client (modèles, brouillons, visuels)",
-  helperText = "Glissez-déposez vos fichiers ici ou cliquez pour parcourir (Word, PDF, Images, Excel, ZIP...)"
+  label = "Fichiers exemplaires & Pièces jointes",
+  helperText = "Glissez-déposez vos documents ici ou cliquez pour parcourir (PDF, Word, Images, Scan...)"
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [lastAddedName, setLastAddedName] = useState<string | null>(null);
-  const dragCounter = useRef(0);
+  const dragCounterRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropAreaRef = useRef<HTMLDivElement>(null);
 
-  // 1. Bloquer strictement les comportements par défaut du navigateur sur window et document.body
+  // Prevent browser default behavior for drag & drop globally without stopping propagation to dropzone
   useEffect(() => {
-    const preventDefaults = (e: DragEvent) => {
+    const handleGlobalDragOver = (e: DragEvent) => {
       e.preventDefault();
-      e.stopPropagation();
+    };
+    const handleGlobalDrop = (e: DragEvent) => {
+      e.preventDefault();
     };
 
-    const events: (keyof WindowEventMap)[] = ['dragenter', 'dragover', 'dragleave', 'drop'];
-
-    events.forEach((eventName) => {
-      window.addEventListener(eventName, preventDefaults as EventListener, false);
-      document.body.addEventListener(eventName, preventDefaults as EventListener, false);
-    });
+    window.addEventListener('dragover', handleGlobalDragOver, false);
+    window.addEventListener('drop', handleGlobalDrop, false);
 
     return () => {
-      events.forEach((eventName) => {
-        window.removeEventListener(eventName, preventDefaults as EventListener, false);
-        document.body.removeEventListener(eventName, preventDefaults as EventListener, false);
-      });
+      window.removeEventListener('dragover', handleGlobalDragOver, false);
+      window.removeEventListener('drop', handleGlobalDrop, false);
     };
   }, []);
 
   const processFileList = useCallback((fileList: FileList | null | File[]) => {
-    if (!fileList || (fileList instanceof FileList && fileList.length === 0) || (Array.isArray(fileList) && fileList.length === 0)) return;
-
+    if (!fileList) return;
     const listArray = Array.from(fileList);
-    const newFiles: UploadedFile[] = [];
-    const remainingSlots = maxFiles - files.length;
+    if (listArray.length === 0) return;
+
+    const remainingSlots = Math.max(0, maxFiles - files.length);
+    if (remainingSlots === 0) return;
+
     const countToAdd = Math.min(listArray.length, remainingSlots);
+    const newFiles: UploadedFile[] = [];
 
     for (let i = 0; i < countToAdd; i++) {
       const file = listArray[i];
-      // Create preview for images
       let previewUrl: string | undefined = undefined;
       if (file.type.startsWith('image/')) {
         try {
           previewUrl = URL.createObjectURL(file);
         } catch {
-          // ignore
+          // ignore preview error
         }
       }
 
@@ -95,54 +91,67 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
       setLastAddedName(newFiles[0].name);
       setTimeout(() => {
         setLastAddedName(null);
-      }, 5000);
+      }, 4000);
     }
   }, [files, maxFiles, onFilesChange]);
 
-  // Handlers pour la zone de dépôt
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current += 1;
-    if (e.dataTransfer && e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      setIsDragging(true);
-    }
-  };
+  // Direct DOM listeners on the drop container to guarantee 100% reliability in all browser contexts & iframes
+  useEffect(() => {
+    const dropArea = dropAreaRef.current;
+    if (!dropArea) return;
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer) {
-      e.dataTransfer.dropEffect = 'copy';
-    }
-    if (!isDragging) {
+    const onDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current += 1;
       setIsDragging(true);
-    }
-  };
+    };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current -= 1;
-    if (dragCounter.current <= 0) {
-      dragCounter.current = 0;
+    const onDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+      setIsDragging(true);
+    };
+
+    const onDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current -= 1;
+      if (dragCounterRef.current <= 0) {
+        dragCounterRef.current = 0;
+        setIsDragging(false);
+      }
+    };
+
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current = 0;
       setIsDragging(false);
-    }
-  };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current = 0;
-    setIsDragging(false);
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processFileList(e.dataTransfer.files);
+      }
+    };
 
-    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFileList(e.dataTransfer.files);
-    }
-  };
+    dropArea.addEventListener('dragenter', onDragEnter);
+    dropArea.addEventListener('dragover', onDragOver);
+    dropArea.addEventListener('dragleave', onDragLeave);
+    dropArea.addEventListener('drop', onDrop);
+
+    return () => {
+      dropArea.removeEventListener('dragenter', onDragEnter);
+      dropArea.removeEventListener('dragover', onDragOver);
+      dropArea.removeEventListener('dragleave', onDragLeave);
+      dropArea.removeEventListener('drop', onDrop);
+    };
+  }, [processFileList]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       processFileList(e.target.files);
     }
     if (fileInputRef.current) {
@@ -157,10 +166,10 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
   const getFileIcon = (file: UploadedFile) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif'].includes(ext || '')) {
-      return <ImageIcon className="w-4 h-4 text-amber-500" />;
+      return <ImageIcon className="w-4 h-4 text-[#FF8800]" />;
     }
     if (['doc', 'docx', 'txt', 'rtf', 'odt', 'pdf'].includes(ext || '')) {
-      return <FileText className="w-4 h-4 text-blue-500" />;
+      return <FileText className="w-4 h-4 text-[#0F52BA]" />;
     }
     if (['xls', 'xlsx', 'csv'].includes(ext || '')) {
       return <FileSpreadsheet className="w-4 h-4 text-emerald-500" />;
@@ -173,10 +182,10 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
       {/* Label and counter */}
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1.5">
-          <Paperclip className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <Paperclip className="w-3.5 h-3.5 text-[#0F52BA] dark:text-blue-400" />
           <span>{label}</span>
         </label>
-        <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-400">
+        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
           {files.length} / {maxFiles} fichier(s)
         </span>
       </div>
@@ -186,15 +195,11 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
         <div
           id="file-dropzone-container"
           ref={dropAreaRef}
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           className={`relative border-2 border-dashed rounded-2xl p-5 sm:p-6 text-center cursor-pointer transition-all duration-200 select-none ${
             isDragging
-              ? 'border-blue-600 bg-blue-100/95 dark:bg-blue-950/90 ring-4 ring-blue-500/30 scale-[1.02] shadow-xl'
-              : 'border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 bg-slate-50/80 dark:bg-slate-800/70 hover:bg-white dark:hover:bg-slate-800'
+              ? 'border-[#0F52BA] bg-blue-100/95 dark:bg-blue-950/90 ring-4 ring-blue-500/30 scale-[1.02] shadow-xl'
+              : 'border-slate-300 dark:border-slate-700 hover:border-[#0F52BA] dark:hover:border-blue-400 bg-slate-50/90 dark:bg-slate-800/70 hover:bg-white dark:hover:bg-slate-800'
           }`}
         >
           <input
@@ -210,15 +215,15 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
           <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
               isDragging 
-                ? 'bg-blue-600 text-white scale-125 shadow-lg shadow-blue-500/50 ring-4 ring-white/50' 
-                : 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                ? 'bg-[#0F52BA] text-white scale-125 shadow-lg shadow-blue-500/50 ring-4 ring-white/50 animate-bounce' 
+                : 'bg-blue-50 dark:bg-blue-900/50 text-[#0F52BA] dark:text-blue-400'
             }`}>
-              <UploadCloud className={`w-6 h-6 ${isDragging ? 'animate-bounce' : ''}`} />
+              <UploadCloud className="w-6 h-6" />
             </div>
 
             <div>
-              <p className={`text-xs sm:text-sm font-extrabold ${isDragging ? 'text-blue-700 dark:text-blue-300' : 'text-slate-800 dark:text-white'}`}>
-                {isDragging ? '📂 Déposez vos fichiers maintenant !' : 'Glissez-déposez vos fichiers exemplaires ici'}
+              <p className={`text-xs sm:text-sm font-extrabold ${isDragging ? 'text-[#0F52BA] dark:text-blue-300' : 'text-slate-800 dark:text-white'}`}>
+                {isDragging ? '📂 Déposez vos fichiers maintenant !' : 'Glissez-déposez vos fichiers exemplaires ou pièces jointes ici'}
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-sm mx-auto">
                 {helperText}
@@ -226,25 +231,25 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
             </div>
 
             <div className="pt-1">
-              <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[11px] font-bold text-blue-600 dark:text-blue-300 shadow-xs hover:bg-blue-50">
-                <Plus className="w-3.5 h-3.5" />
-                <span>Parcourir mes documents sur mon appareil</span>
+              <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[11px] font-bold text-[#0F52BA] dark:text-blue-300 shadow-xs hover:bg-blue-50">
+                <Plus className="w-3.5 h-3.5 text-[#FF8800]" />
+                <span>Ou cliquez pour parcourir vos fichiers</span>
               </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Confirmation & Assistant message for WhatsApp dispatch */}
+      {/* Confirmation notification after file added */}
       {lastAddedName && (
         <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200 text-xs flex items-start space-x-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
           <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <p className="font-bold">
-              Fichier <span className="underline font-mono">[{lastAddedName}]</span> sélectionné !
+              Fichier <span className="underline font-mono">[{lastAddedName}]</span> ajouté avec succès !
             </p>
             <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
-              Cliquez sur le bouton de commande pour nous l'envoyer directement avec votre commande via WhatsApp.
+              Il sera inclus dans votre récapitulatif de commande WhatsApp.
             </p>
           </div>
         </div>
@@ -302,10 +307,10 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
             ))}
           </div>
 
-          <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 text-[11px] text-blue-900 dark:text-blue-300 flex items-center space-x-2">
-            <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+          <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 text-[11px] text-[#0F52BA] dark:text-blue-300 flex items-center space-x-2">
+            <Info className="w-3.5 h-3.5 text-[#0F52BA] dark:text-blue-400 flex-shrink-0" />
             <span>
-              Vos fichiers seront automatiquement référencés dans le message WhatsApp et prêts pour l'envoi en 1 clic.
+              Vos fichiers seront joints et transmis avec votre message de commande WhatsApp.
             </span>
           </div>
         </div>
@@ -313,4 +318,3 @@ export const FileUploadDropzone: React.FC<FileUploadDropzoneProps> = ({
     </div>
   );
 };
-

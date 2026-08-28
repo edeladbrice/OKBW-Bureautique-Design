@@ -4,7 +4,8 @@ export type ServiceCategory =
   | 'design'
   | 'optimisation'
   | 'pdf'
-  | 'web';
+  | 'web'
+  | 'administratif';
 
 export interface PricingTier {
   minQty: number;
@@ -16,13 +17,15 @@ export interface PricingTier {
 export interface ServiceItem {
   id: string;
   name: string;
-  category: 'bureautique' | 'design' | 'optimisation' | 'pdf' | 'web';
+  category: 'bureautique' | 'design' | 'optimisation' | 'pdf' | 'web' | 'administratif';
   basePrice: number;
   maxPrice?: number;
   priceDisplay: string;
   unitLabel: string;
   description: string;
   promoNote?: string;
+  targetAudience?: string;
+  requiredDocuments?: string[];
   inclusions: string[];
   pricingTiers?: PricingTier[];
   volumeRulesDescription?: string;

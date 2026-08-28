@@ -56,22 +56,22 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
     {
       stepNumber: "02",
       badge: "Étape 2",
-      title: "Glissez vos fichiers & Choisissez votre délai",
-      shortDesc: "Joignez vos anciens documents, brouillons ou photos et cochez l'urgence souhaitée.",
+      title: "Renseignez vos coordonnées & vos consignes",
+      shortDesc: "Indiquez votre nom, la quantité/pages souhaitée et vos instructions spécifiques.",
       details: [
-        "Zone de glisser-déposer intuitive : déposez vos fichiers Word, PDF, images, manuscrits ou ZIP.",
+        "Formulaire simple et rapide : saisissez votre nom et vos consignes particulières.",
         "Sélectionnez le délai souhaité : Moins de 2h (Ultra Express), Moins de 12h (Journée), ou 24-48h (Standard).",
-        "Ajoutez vos consignes personnalisées (couleurs, polices, mentions spécifiques)."
+        "Aucun téléchargement complexe : vos fichiers seront directement transmis dans la discussion WhatsApp."
       ],
       icon: UploadCloud,
       accentColor: "from-amber-500 to-orange-600",
       pillColor: "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
       ctaText: "Ouvrir le Simulateur",
       ctaAction: onOpenCalculator,
-      previewTitle: "Fichiers & Délais enregistrés",
+      previewTitle: "Commande & Délais enregistrés",
       previewBadge: "Étape 2/4",
       previewSnippet: {
-        fileAttached: "mon_ancien_cv.pdf (460 Ko)",
+        fileAttached: "📎 Fichiers joints en direct sur WhatsApp",
         turnaround: "⚡ Express Journée (< 12 Heures)",
         instructions: "Consignes : Thème sobre Bleu & Orange, mise en avant de mon expérience de 3 ans."
       }
@@ -80,11 +80,11 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
       stepNumber: "03",
       badge: "Étape 3",
       title: "Validez en 1 Clic sur WhatsApp",
-      shortDesc: "Un message WhatsApp ultra-structuré et pré-rempli est généré automatiquement.",
+      shortDesc: "Redirection instantanée vers WhatsApp avec un message pré-rempli et structuré.",
       details: [
-        "Un récapitulatif clair de votre commande est transmis directement à notre équipe technique.",
-        "Vos fichiers joints et consignes particulières sont immédiatement pris en charge.",
-        "Échanges en direct avec un graphiste / opérateur dédié pour toute précision."
+        "Un récapitulatif clair (Service, Quantité, Nom, Instructions, Montant estimé) est prêt à être envoyé.",
+        "Joignez directement vos photos, scans ou documents Word/PDF dans notre discussion.",
+        "Échanges en direct avec un opérateur dédié pour démarrer immédiatement votre travail."
       ],
       icon: MessageSquare,
       accentColor: "from-emerald-600 to-teal-600",
@@ -94,7 +94,7 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
       previewTitle: "Message WhatsApp Pré-rempli",
       previewBadge: "Étape 3/4",
       previewSnippet: {
-        whatsappMsg: "Bonjour Okbw Bureautique ! Je souhaite commander un CV Canadien (500 F) avec le délai Express <12h. Fichier joint : mon_ancien_cv.pdf. Merci !",
+        whatsappMsg: "Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n- Service : CV Moderne Canadien ATS\n- Quantité / Pages : 1 document\n- Nom du client : M. Jean-Marc\n- Montant estimé : 500 F CFA\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !",
         operatorStatus: "🟢 Opérateur Okbw en ligne • Réponse en moins de 15 minutes"
       }
     },

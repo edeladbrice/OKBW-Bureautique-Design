@@ -51,13 +51,21 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="relative z-10 space-y-4">
               
               {/* Badge & Official Logo header */}
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-bold text-orange-200">
                   <span className="w-2 h-2 rounded-full bg-[#FF5E14] animate-ping"></span>
-                  <span>Consultant Informatique & Créateur Digital</span>
+                  <span>Consultant Informatique & Bureautique</span>
                   <span className="opacity-60">•</span>
                   <span className="text-white">Abidjan & UEMOA</span>
                 </div>
+
+                <a
+                  href="#catalogue"
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#FF5E14] hover:bg-[#e04f0f] text-white text-[11px] font-black shadow-md transition-all animate-pulse"
+                >
+                  <span>🇨🇮</span>
+                  <span>Nationalité & Casier en ligne : 3 500 FCFA</span>
+                </a>
 
                 {onOpenAdminGuide && (
                   <button

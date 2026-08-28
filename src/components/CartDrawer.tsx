@@ -16,11 +16,13 @@ import {
   Receipt,
   Lock,
   ExternalLink,
-  Paperclip,
+  User,
+  Phone,
+  FileText,
   Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { CartItem, TurnaroundOption, UploadedFile } from '../types';
+import { CartItem, TurnaroundOption } from '../types';
 import { CONTACT_INFO } from '../data/servicesData';
 import { 
   formatFCFA, 
@@ -28,7 +30,6 @@ import {
   generateWavePaymentUrl,
   TURNAROUND_OPTIONS 
 } from '../utils/pricing';
-import { FileUploadDropzone } from './FileUploadDropzone';
 import { TurnaroundSelector } from './TurnaroundSelector';
 import { WavePaymentModal } from './WavePaymentModal';
 
@@ -59,11 +60,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     return TURNAROUND_OPTIONS.find(t => t.id === 'express-same-day') || TURNAROUND_OPTIONS[1];
   });
   const [orderNotes, setOrderNotes] = useState('');
-  const [orderFiles, setOrderFiles] = useState<UploadedFile[]>([]);
   const [isWaveModalOpen, setIsWaveModalOpen] = useState(false);
 
   const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const waveDirectUrl = generateWavePaymentUrl(totalAmount, `Panier Okbw (${customerName || 'Client'})`);
 
   const handleWhatsAppCheckout = () => {
     try {
@@ -74,13 +73,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       });
     } catch (e) {}
 
-    // Combine cart items with uploaded general files
-    const enrichedCart = cart.map(item => ({
-      ...item,
-      files: item.files && item.files.length > 0 ? item.files : orderFiles
-    }));
-
-    const whatsappUrl = generateWhatsAppOrderLink(enrichedCart, {
+    const whatsappUrl = generateWhatsAppOrderLink(cart, {
       name: customerName,
       phone: customerPhone,
       turnaroundOption: selectedTurnaround,
@@ -197,21 +190,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             </p>
                           )}
 
-                          {item.files && item.files.length > 0 ? (
-                            <div className="text-[11px] text-blue-700 dark:text-blue-400 font-medium space-y-0.5">
-                              <span className="font-bold">📎 {item.files.length} fichier(s) exemplaire(s) joint(s) :</span>
-                              {item.files.map((f, fi) => (
-                                <div key={fi} className="pl-3 text-[10px] text-slate-600 dark:text-slate-400 truncate">
-                                  • {f.name}
-                                </div>
-                              ))}
-                            </div>
-                          ) : item.fileName ? (
-                            <div className="text-[11px] text-blue-700 dark:text-blue-400 font-medium flex items-center space-x-1">
-                              <span>📎 Fichier joint : {item.fileName}</span>
-                            </div>
-                          ) : null}
-
                           {/* Quantity & Subtotal */}
                           <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
                             <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -255,46 +233,60 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     />
                   </div>
 
-                  {/* Section: Exemplar files upload for the order */}
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <FileUploadDropzone
-                      files={orderFiles}
-                      onFilesChange={setOrderFiles}
-                      label="Fichiers exemplaires globaux pour la commande"
-                      helperText="Glissez-déposez ici vos modèles de mise en page, textes à saisir, photos ou logos."
-                    />
-                  </div>
-
                   {/* Customer Information Form */}
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Vos Coordonnées & Consignes
-                    </h4>
+                    <div className="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      <User className="w-4 h-4 text-[#0F52BA]" />
+                      <span>Coordonnées du client & Consignes</span>
+                    </div>
 
                     <div className="space-y-2.5">
-                      <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Votre Nom & Prénoms (ex: M. Kouassi Fabrice)"
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-850 text-slate-800 dark:text-white placeholder:text-slate-400"
-                      />
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 block">
+                          Nom & Prénoms du client <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Votre Nom & Prénoms (ex: M. Kouassi Fabrice)"
+                          className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-850 text-slate-800 dark:text-white placeholder:text-slate-400"
+                        />
+                      </div>
 
-                      <input
-                        type="tel"
-                        value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
-                        placeholder="Votre Numéro WhatsApp / Téléphone"
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-850 text-slate-800 dark:text-white placeholder:text-slate-400"
-                      />
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 block">
+                          Numéro WhatsApp / Téléphone
+                        </label>
+                        <input
+                          type="tel"
+                          value={customerPhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                          placeholder="Votre Numéro WhatsApp / Téléphone"
+                          className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-850 text-slate-800 dark:text-white placeholder:text-slate-400"
+                        />
+                      </div>
 
-                      <textarea
-                        rows={2}
-                        value={orderNotes}
-                        onChange={(e) => setOrderNotes(e.target.value)}
-                        placeholder="Consignes particulières, instructions de police, couleurs, cadrage..."
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 text-slate-800 dark:text-white placeholder:text-slate-400"
-                      />
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1 block">
+                          Instructions spécifiques & Détails
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={orderNotes}
+                          onChange={(e) => setOrderNotes(e.target.value)}
+                          placeholder="Consignes particulières, instructions de police, couleurs, cadrage..."
+                          className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 text-slate-800 dark:text-white placeholder:text-slate-400"
+                        />
+                      </div>
+
+                      {/* Friendly WhatsApp notice for files */}
+                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start space-x-2">
+                        <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                        <span>
+                          <strong>Joindre vos fichiers :</strong> Vous joindrez directement vos documents (photos, Word, PDF, scans) dans la discussion WhatsApp pré-remplie.
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -323,7 +315,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 {/* Total Calculation Display */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">Total exact de la commande</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">Montant total estimé</span>
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Sans frais de transaction • 0% frais</span>
                   </div>
                   <span className="text-2xl sm:text-3xl font-black text-blue-950 dark:text-blue-300 font-['Outfit']">
@@ -338,7 +330,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-950/20 transition-all flex items-center justify-center space-x-2"
                 >
                   <MessageSquare className="w-4 h-4 fill-white/20" />
-                  <span>Valider & Transmettre sur WhatsApp</span>
+                  <span>Valider / Commander sur WhatsApp</span>
                 </button>
 
                 {/* Checkout Button 2: Wave direct payment with exact locked amount modal */}

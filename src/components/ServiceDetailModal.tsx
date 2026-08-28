@@ -10,13 +10,13 @@ import {
   Zap, 
   Plus, 
   Minus,
-  Sparkles,
   Lock,
-  ExternalLink,
-  Info
+  FileCheck2,
+  AlertCircle,
+  User,
+  FileText
 } from 'lucide-react';
-import { ServiceItem, TurnaroundOption, UploadedFile } from '../types';
-import { CONTACT_INFO } from '../data/servicesData';
+import { ServiceItem, TurnaroundOption } from '../types';
 import { 
   calculateServicePrice, 
   formatFCFA, 
@@ -24,7 +24,6 @@ import {
   generateWavePaymentUrl,
   TURNAROUND_OPTIONS
 } from '../utils/pricing';
-import { FileUploadDropzone } from './FileUploadDropzone';
 import { TurnaroundSelector } from './TurnaroundSelector';
 import { WavePaymentModal } from './WavePaymentModal';
 
@@ -35,8 +34,7 @@ interface ServiceDetailModalProps {
     service: ServiceItem, 
     quantity: number, 
     notes?: string, 
-    fileName?: string,
-    files?: UploadedFile[],
+    customerName?: string,
     turnaroundId?: string
   ) => void;
 }
@@ -49,8 +47,8 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   if (!service) return null;
 
   const [quantity, setQuantity] = useState<number>(1);
+  const [customerName, setCustomerName] = useState<string>('');
   const [customNotes, setCustomNotes] = useState<string>('');
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption>(() => {
     return TURNAROUND_OPTIONS.find(t => t.id === 'standard') || TURNAROUND_OPTIONS[2];
   });
@@ -63,13 +61,11 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   const handleDecrement = () => setQuantity(prev => Math.max(1, prev - 1));
 
   const handleAddToCart = () => {
-    const primaryFileName = uploadedFiles.length > 0 ? uploadedFiles[0].name : undefined;
     onAddToCart(
       service, 
       quantity, 
       customNotes, 
-      primaryFileName,
-      uploadedFiles,
+      customerName,
       selectedTurnaround.id
     );
     setIsAdded(true);
@@ -79,7 +75,15 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
     }, 700);
   };
 
-  const waveExactUrl = generateWavePaymentUrl(totalPrice, `Service ${service.name.slice(0, 30)}`);
+  const isAdministrative = service.category === 'administratif' || !!service.requiredDocuments;
+
+  const whatsappRedirectUrl = generateQuickServiceWhatsAppLink(
+    service,
+    quantity,
+    customerName,
+    customNotes,
+    selectedTurnaround
+  );
 
   return (
     <>
@@ -89,7 +93,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Header Banner */}
-          <div className="bg-gradient-to-r from-blue-900 via-blue-950 to-slate-900 text-white p-6 relative">
+          <div className="bg-gradient-to-r from-[#0F52BA] via-slate-900 to-slate-950 text-white p-6 relative">
             <button
               id="close-detail-modal-btn"
               onClick={onClose}
@@ -99,21 +103,29 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
-              <span>{service.category.toUpperCase()}</span>
+            <div className="flex items-center space-x-2 text-xs font-bold text-[#FF8800] uppercase tracking-wider mb-2">
+              <span>{service.category === 'administratif' ? '🏛️ E-ADMINISTRATION & JUSTICE' : service.category.toUpperCase()}</span>
               <span>•</span>
               <span className="flex items-center space-x-1 text-slate-300">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <Clock className="w-3.5 h-3.5 text-[#FF8800]" />
                 <span>Délai habituel : {service.deliveryTime}</span>
               </span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-extrabold font-['Outfit'] pr-8">
+            <h2 className="text-xl sm:text-2xl font-extrabold font-['Outfit'] pr-8 text-white">
               {service.name}
             </h2>
 
+            {/* Target Audience Badge if administrative */}
+            {service.targetAudience && (
+              <div className="mt-2 inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-orange-500/20 border border-orange-400/40 text-orange-200 text-xs font-semibold">
+                <span>🇨🇮</span>
+                <span>{service.targetAudience}</span>
+              </div>
+            )}
+
             <div className="mt-3 flex items-baseline space-x-3 flex-wrap gap-y-2">
-              <span className="text-2xl sm:text-3xl font-black text-amber-400 font-['Outfit']">
+              <span className="text-2xl sm:text-3xl font-black text-[#FF8800] font-['Outfit']">
                 {formatFCFA(totalPrice)}
               </span>
               <span className="text-xs text-slate-300">
@@ -136,11 +148,38 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{service.description}</p>
             </div>
 
+            {/* REQUIRED DOCUMENTS CHECKLIST (Highlighted for Nationalité, Casier, etc.) */}
+            {service.requiredDocuments && service.requiredDocuments.length > 0 && (
+              <div className="p-5 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border-2 border-[#FF5E14]/40 dark:border-[#FF5E14]/50 text-slate-900 dark:text-slate-100 space-y-3 shadow-xs">
+                <div className="flex items-center space-x-2.5 text-sm font-extrabold text-[#FF5E14] dark:text-[#FF8800]">
+                  <FileCheck2 className="w-5 h-5 flex-shrink-0" />
+                  <span>📋 Documents & Pièces à Fournir Obligatoires</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  Pour que votre dossier soit recevable et traité sans retard, veuillez vous munir des pièces suivantes (en photo ou scan net) :
+                </p>
+                <div className="space-y-2 pt-1">
+                  {service.requiredDocuments.map((doc, idx) => (
+                    <div key={idx} className="flex items-start space-x-2.5 p-2.5 rounded-xl bg-white dark:bg-slate-850 border border-orange-200/80 dark:border-orange-900/50 text-xs text-slate-800 dark:text-slate-200">
+                      <div className="w-5 h-5 rounded-full bg-orange-100 dark:bg-orange-900/60 text-[#FF5E14] dark:text-orange-300 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
+                        {idx + 1}
+                      </div>
+                      <span className="font-semibold">{doc}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center space-x-2 text-[11px] text-orange-800 dark:text-orange-300/90 pt-1 font-medium">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-[#FF5E14]" />
+                  <span>Vous joindrez les photos ou scans de ces pièces directement dans la discussion WhatsApp.</span>
+                </div>
+              </div>
+            )}
+
             {/* Special Promo or Tier Rule if any */}
             {(service.promoNote || ruleApplied || service.volumeRulesDescription) && (
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-900/60 text-amber-950 dark:text-amber-200 space-y-1.5">
                 <div className="flex items-center space-x-2 font-bold text-xs text-amber-900 dark:text-amber-300">
-                  <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <Zap className="w-4 h-4 text-[#FF8800]" />
                   <span>Règle Tarifaire & Économies Dégressives</span>
                 </div>
                 <p className="text-xs font-medium text-amber-800 dark:text-amber-300/90">
@@ -171,10 +210,10 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-200 block">
-                  Quantité souhaitée ({service.unitLabel})
+                  Quantité / Nombre de pages ({service.unitLabel})
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Le tarif dégressif s'applique automatiquement
+                  {isAdministrative ? 'Nombre de demandeurs ou de dossiers' : 'Le tarif dégressif s\'applique automatiquement'}
                 </span>
               </div>
 
@@ -208,32 +247,60 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Turnaround / Delay selection via Interactive Checkboxes */}
+            {/* Turnaround / Delay selection */}
             <TurnaroundSelector
               selectedId={selectedTurnaround.id}
               onSelect={(opt) => setSelectedTurnaround(opt)}
             />
 
-            {/* Drag & Drop Client Exemplar Files Component */}
-            <FileUploadDropzone
-              files={uploadedFiles}
-              onFilesChange={setUploadedFiles}
-              label="Fichiers exemplaires du client (textes, modèles, maquettes, photos)"
-              helperText="Glissez-déposez vos fichiers Word, PDF, photos ou maquettes directement ici."
-            />
+            {/* FORMULAIRE DE COMMANDE CLASSIQUE */}
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                  <User className="w-4 h-4 text-[#0F52BA] dark:text-blue-400" />
+                  <span>Formulaire de commande & Instructions</span>
+                </div>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center space-x-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>WhatsApp direct</span>
+                </span>
+              </div>
 
-            {/* Custom instructions / Notes */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Consignes particulières ou précisions pour votre commande (facultatif)
-              </label>
-              <textarea
-                rows={2}
-                value={customNotes}
-                onChange={(e) => setCustomNotes(e.target.value)}
-                placeholder="Ex: Titre précis, style souhaité, couleurs de l'entreprise, date limite impérative..."
-                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-600 focus:bg-white dark:focus:bg-slate-850 text-slate-800 dark:text-white placeholder:text-slate-400"
-              />
+              {/* Customer Name field */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                  Nom & Prénoms du client <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Ex: M. Kouadio Jean-Marc"
+                  className="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#0F52BA] text-slate-800 dark:text-white placeholder:text-slate-400 font-medium"
+                />
+              </div>
+
+              {/* Instructions / Details field */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                  {isAdministrative ? "Précisions sur le demandeur (Lieu & Date de naissance, etc.)" : "Détails & Instructions spécifiques"}
+                </label>
+                <textarea
+                  rows={2}
+                  value={customNotes}
+                  onChange={(e) => setCustomNotes(e.target.value)}
+                  placeholder={isAdministrative ? "Ex: Nom & Prénoms complets, Date et lieu de naissance, Tribunal de résidence..." : "Ex: Couleurs souhaitées, mentions indispensables, police ou style..."}
+                  className="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#0F52BA] text-slate-800 dark:text-white placeholder:text-slate-400 font-medium"
+                />
+              </div>
+
+              {/* Friendly Direct WhatsApp Attachment Notice */}
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start space-x-2">
+                <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                <span>
+                  <strong>Transmission directe :</strong> Vous joindrez directement vos fichiers (Word, PDF, photos, maquettes) dans notre discussion WhatsApp après avoir cliqué sur <em>Commander sur WhatsApp</em>.
+                </span>
+              </div>
             </div>
 
             {/* Wave Exact Amount Security Banner */}
@@ -255,22 +322,22 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
             
             <div className="text-center sm:text-left w-full sm:w-auto">
-              <span className="text-xs text-slate-500 dark:text-slate-400 block">Total exact de la prestation :</span>
-              <span className="text-2xl font-black text-blue-950 dark:text-blue-300 font-['Outfit']">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block">Montant estimé :</span>
+              <span className="text-2xl font-black text-[#0F52BA] dark:text-blue-300 font-['Outfit']">
                 {formatFCFA(totalPrice)}
               </span>
             </div>
 
             <div className="flex items-center space-x-2 w-full sm:w-auto flex-wrap sm:flex-nowrap gap-y-2">
-              {/* Direct WhatsApp fast order with files & exact Wave link */}
+              {/* Direct WhatsApp fast order with structured pre-filled message */}
               <a
-                href={generateQuickServiceWhatsAppLink(service, quantity, uploadedFiles, selectedTurnaround)}
+                href={whatsappRedirectUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors whitespace-nowrap"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Commander WhatsApp</span>
+                <span>Valider / Commander sur WhatsApp</span>
               </a>
 
               {/* Direct Wave Pay button with exact locked amount modal */}
@@ -290,7 +357,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                 className={`w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-3 rounded-xl font-extrabold text-xs transition-all whitespace-nowrap ${
                   isAdded 
                     ? 'bg-emerald-600 text-white' 
-                    : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
+                    : 'bg-[#FF5E14] hover:bg-[#e04f0f] text-white shadow-md shadow-orange-500/20'
                 }`}
               >
                 {isAdded ? (
@@ -318,7 +385,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
         onClose={() => setIsWaveModalOpen(false)}
         amount={totalPrice}
         serviceTitle={`${service.name} (${quantity} ${service.unitLabel})`}
-        customerName={customNotes ? `Client (${customNotes.slice(0, 20)})` : undefined}
+        customerName={customerName || (customNotes ? `Client (${customNotes.slice(0, 20)})` : undefined)}
       />
     </>
   );

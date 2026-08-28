@@ -2,14 +2,14 @@ import React from 'react';
 import { 
   Percent, 
   ArrowRight, 
-  Check, 
   Sparkles, 
-  CreditCard, 
   MessageSquare, 
   Zap, 
   FileText, 
   Globe,
-  HelpCircle
+  ShieldCheck,
+  FileCheck2,
+  FileCheck
 } from 'lucide-react';
 import { CONTACT_INFO } from '../data/servicesData';
 
@@ -26,14 +26,65 @@ export const PricingMatrix: React.FC<PricingMatrixProps> = ({ onOpenCalculator }
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/60 text-[#FF5E14] border border-orange-200 dark:border-orange-900/60 text-xs font-bold uppercase tracking-wider">
             <Percent className="w-3.5 h-3.5" />
-            <span>Grilles Tarifaires & Remises au Volume</span>
+            <span>Grilles Tarifaires & Démarches Officielles</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-black font-['Outfit'] tracking-tight text-slate-900 dark:text-white">
             Transparence Totale des Prix & Économies Dégressives
           </h2>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
-            Plus vous commandez, plus vous économisez ! Profitez de nos tarifs dégressifs automatiques sur tous vos travaux récurrents et volumineux.
+            Tarifs clairs, sans frais cachés pour vos démarches administratives officielles ivoiriennes, vos documents bureautiques et vos créations visuelles.
           </p>
+        </div>
+
+        {/* Highlight Banner: Demarches Officielles Ivoiriennes 3 500 F */}
+        <div className="mb-12 rounded-3xl bg-gradient-to-br from-slate-900 via-[#0F52BA]/90 to-slate-950 text-white p-6 sm:p-8 border border-orange-500/30 shadow-xl overflow-hidden relative">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-3 max-w-2xl">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-400/40 text-orange-200 text-xs font-bold">
+                <span>🇨🇮</span>
+                <span>E-Justice & Actes Officiels de Côte d'Ivoire</span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black font-['Outfit'] text-white">
+                Certificat de Nationalité & Casier Judiciaire à <span className="text-[#FF5E14]">3 500 FCFA</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                Réservé aux personnes de nationalité ivoirienne nées de parents ivoiriens. Traitement dématérialisé rapide avec dépôt au greffe du tribunal et transmission des actes officiels en PDF HD + originaux physiques.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1 text-xs">
+                <span className="flex items-center space-x-1.5 bg-white/10 px-3 py-1.5 rounded-xl text-slate-100">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Nationalité Ivoirienne (3 500 F)</span>
+                </span>
+                <span className="flex items-center space-x-1.5 bg-white/10 px-3 py-1.5 rounded-xl text-slate-100">
+                  <FileCheck2 className="w-4 h-4 text-emerald-400" />
+                  <span>Casier Judiciaire B3 (3 500 F)</span>
+                </span>
+                <span className="flex items-center space-x-1.5 bg-orange-500/30 border border-orange-400/40 px-3 py-1.5 rounded-xl text-orange-200 font-bold">
+                  <Sparkles className="w-4 h-4 text-[#FF5E14]" />
+                  <span>Pack Duo Concours (6 500 F)</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 w-full lg:w-auto">
+              <a
+                href={`https://wa.me/2250141752403?text=${encodeURIComponent('Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n\n- Service : Demande de Certificat de Nationalité et/ou Casier Judiciaire (3 500 F)\n- Quantité / Pages : 1 dossier\n- Nom du client : Non renseigné\n- Détails / Instructions : Personne de nationalité ivoirienne née de parents ivoiriens\n- Montant estimé : 3 500 F CFA\n\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3.5 rounded-2xl bg-[#FF5E14] hover:bg-[#e04f0f] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center space-x-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Commander l'Acte Officiel (3 500 F)</span>
+              </a>
+              <a
+                href="#catalogue"
+                className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all flex items-center justify-center space-x-1.5"
+              >
+                <FileCheck className="w-4 h-4 text-orange-300" />
+                <span>Voir la liste des pièces à fournir</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Volume Discount Tables Bento Grid */}
@@ -253,7 +304,7 @@ export const PricingMatrix: React.FC<PricingMatrixProps> = ({ onOpenCalculator }
             </div>
 
             <a
-              href={`https://wa.me/2250501088608?text=${encodeURIComponent('Bonjour Okbw ! Je souhaite discuter d\'un projet de site web ou d\'application informatique.')}`}
+              href={`https://wa.me/2250141752403?text=${encodeURIComponent('Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n\n- Service : Projet de site web ou application mobile\n- Quantité / Pages : 1 projet\n- Nom du client : Non renseigné\n- Détails / Instructions : Échange avec le consultant\n- Montant estimé : Sur devis\n\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 rounded-2xl bg-[#FF5E14] hover:brightness-110 text-white font-black text-xs shadow-md shadow-orange-500/20 transition-all whitespace-nowrap"
@@ -289,7 +340,7 @@ export const PricingMatrix: React.FC<PricingMatrixProps> = ({ onOpenCalculator }
                   </td>
                   <td className="py-5 px-6 text-right">
                     <a
-                      href={`https://wa.me/2250501088608?text=${encodeURIComponent('Bonjour Okbw ! Je souhaite commander la création d\'un Site Web Vitrine (35 000 F - 50 000 F).')}`}
+                      href={`https://wa.me/2250141752403?text=${encodeURIComponent('Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n\n- Service : Site Web Vitrine (35 000 F - 50 000 F)\n- Quantité / Pages : 1 site vitrine\n- Nom du client : Non renseigné\n- Détails / Instructions : Landing page responsive\n- Montant estimé : 35 000 F CFA\n\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
@@ -317,7 +368,7 @@ export const PricingMatrix: React.FC<PricingMatrixProps> = ({ onOpenCalculator }
                   </td>
                   <td className="py-5 px-6 text-right">
                     <a
-                      href={`https://wa.me/2250501088608?text=${encodeURIComponent('Bonjour Okbw ! Je souhaite commander un Site Web Multi-pages / E-commerce (75 000 F - 150 000 F).')}`}
+                      href={`https://wa.me/2250141752403?text=${encodeURIComponent('Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n\n- Service : Site Web Multi-pages / E-commerce (75 000 F - 150 000 F)\n- Quantité / Pages : 1 site complet\n- Nom du client : Non renseigné\n- Détails / Instructions : Boutique ou site entreprise\n- Montant estimé : 75 000 F CFA\n\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-[#0F52BA] hover:brightness-110 text-white font-bold text-xs shadow-sm"
@@ -342,7 +393,7 @@ export const PricingMatrix: React.FC<PricingMatrixProps> = ({ onOpenCalculator }
                   </td>
                   <td className="py-5 px-6 text-right">
                     <a
-                      href={`https://wa.me/2250501088608?text=${encodeURIComponent('Bonjour Okbw ! Je souhaite commander une Application Mobile PWA (60 000 F - 100 000 F).')}`}
+                      href={`https://wa.me/2250141752403?text=${encodeURIComponent('Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n\n- Service : Application Mobile PWA (60 000 F - 100 000 F)\n- Quantité / Pages : 1 application mobile\n- Nom du client : Non renseigné\n- Détails / Instructions : PWA / Android\n- Montant estimé : 60 000 F CFA\n\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
@@ -367,7 +418,7 @@ export const PricingMatrix: React.FC<PricingMatrixProps> = ({ onOpenCalculator }
                   </td>
                   <td className="py-5 px-6 text-right">
                     <a
-                      href={`https://wa.me/2250501088608?text=${encodeURIComponent('Bonjour Okbw ! J\'ai un projet informatique sur-mesure et je souhaite obtenir une étude / devis.')}`}
+                      href={`https://wa.me/2250141752403?text=${encodeURIComponent('Bonjour OKBW Bureautique & Design !\nJe souhaite passer une commande :\n\n- Service : Projet informatique sur-mesure / Logiciel\n- Quantité / Pages : 1 projet\n- Nom du client : Non renseigné\n- Détails / Instructions : Étude et devis personnalisé\n- Montant estimé : Sur devis\n\nJe vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-[#FF5E14] font-bold text-xs shadow-sm"

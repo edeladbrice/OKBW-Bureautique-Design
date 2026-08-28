@@ -6,23 +6,19 @@ import {
   Sparkles, 
   Globe, 
   Search, 
-  Filter, 
-  Plus, 
   ShoppingBag, 
-  ArrowRight, 
   Check, 
   Info, 
   Zap, 
-  CreditCard, 
   MessageSquare,
   Clock,
-  ChevronRight,
-  Shield,
-  Layers
+  Layers,
+  ShieldCheck,
+  FileCheck
 } from 'lucide-react';
 import { ServiceItem, ServiceCategory } from '../types';
-import { SERVICES_DATA, CONTACT_INFO } from '../data/servicesData';
-import { formatFCFA, generateQuickServiceWhatsAppLink } from '../utils/pricing';
+import { SERVICES_DATA } from '../data/servicesData';
+import { generateQuickServiceWhatsAppLink } from '../utils/pricing';
 
 interface ServicesCatalogProps {
   onAddToCart: (service: ServiceItem, quantity?: number) => void;
@@ -45,6 +41,12 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
       label: 'Toutes les Prestations', 
       count: SERVICES_DATA.length,
       icon: <Layers className="w-4 h-4" /> 
+    },
+    { 
+      id: 'administratif', 
+      label: '🏛️ E-Justice & Actes 🇨🇮', 
+      count: SERVICES_DATA.filter(s => s.category === 'administratif').length,
+      icon: <ShieldCheck className="w-4 h-4 text-[#FF5E14]" /> 
     },
     { 
       id: 'bureautique', 
@@ -84,7 +86,9 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
       const matchesQuery = 
         service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (service.promoNote && service.promoNote.toLowerCase().includes(searchQuery.toLowerCase()));
+        (service.targetAudience && service.targetAudience.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (service.promoNote && service.promoNote.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (service.requiredDocuments && service.requiredDocuments.some(d => d.toLowerCase().includes(searchQuery.toLowerCase())));
       return matchesCategory && matchesQuery;
     });
   }, [selectedCategory, searchQuery]);
@@ -110,7 +114,7 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
             Catalogue des Services & Commandes Directes
           </h2>
           <p className="text-base text-slate-600 dark:text-slate-300">
-            Commandez vos prestations en 1 clic avec nos tarifs dégressifs transparents. Règlement sécurisé via Wave Business et confirmation directe sur WhatsApp.
+            Commandez vos démarches administratives officielles, documents bureautiques, designs et solutions PDF en 1 clic. Règlement sécurisé via Wave Business et confirmation directe sur WhatsApp.
           </p>
         </div>
 
@@ -153,7 +157,7 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher un service (ex: CV, Affiche, Logo, Saisie, PDF...)"
+                placeholder="Rechercher un service (ex: Nationalité, Casier, CV, Affiche, Logo, Saisie, PDF...)"
                 className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0F52BA] focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400"
               />
               {searchQuery && (
@@ -194,9 +198,11 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                 id={`service-card-${service.id}`}
                 onClick={() => onSelectService(service)}
                 className={`group bg-white dark:bg-slate-900 rounded-3xl border transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 ${
-                  service.recommended 
-                    ? 'border-[#0F52BA]/50 dark:border-blue-500/50 shadow-md ring-1 ring-[#0F52BA]/20 dark:ring-blue-500/20' 
-                    : 'border-slate-200/90 dark:border-slate-800 shadow-sm hover:border-[#0F52BA]/40 dark:hover:border-blue-500/40'
+                  service.category === 'administratif'
+                    ? 'border-[#FF5E14]/40 dark:border-orange-500/40 shadow-sm ring-1 ring-[#FF5E14]/20'
+                    : service.recommended 
+                      ? 'border-[#0F52BA]/50 dark:border-blue-500/50 shadow-md ring-1 ring-[#0F52BA]/20 dark:ring-blue-500/20' 
+                      : 'border-slate-200/90 dark:border-slate-800 shadow-sm hover:border-[#0F52BA]/40 dark:hover:border-blue-500/40'
                 }`}
               >
                 {/* Top Card Body */}
@@ -206,9 +212,11 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                   <div className="flex items-center justify-between gap-2">
                     {service.badge ? (
                       <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wide ${
-                        service.recommended 
-                          ? 'bg-[#0F52BA] text-white' 
-                          : 'bg-orange-50 dark:bg-orange-950/60 text-[#FF5E14] border border-orange-200 dark:border-orange-900/60'
+                        service.category === 'administratif'
+                          ? 'bg-[#FF5E14] text-white'
+                          : service.recommended 
+                            ? 'bg-[#0F52BA] text-white' 
+                            : 'bg-orange-50 dark:bg-orange-950/60 text-[#FF5E14] border border-orange-200 dark:border-orange-900/60'
                       }`}>
                         {service.badge}
                       </span>
@@ -239,10 +247,31 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                     </div>
                   </div>
 
+                  {/* Target audience banner if any */}
+                  {service.targetAudience && (
+                    <div className="px-2.5 py-1 rounded-xl bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-900/50 text-[11px] text-[#FF5E14] dark:text-orange-300 font-semibold flex items-center space-x-1.5">
+                      <span>🇨🇮</span>
+                      <span className="truncate">{service.targetAudience}</span>
+                    </div>
+                  )}
+
                   {/* Description */}
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
                     {service.description}
                   </p>
+
+                  {/* Required Documents Highlight Chip */}
+                  {service.requiredDocuments && service.requiredDocuments.length > 0 && (
+                    <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 space-y-1">
+                      <div className="flex items-center space-x-1.5 text-[11px] font-bold text-[#FF5E14] dark:text-orange-400">
+                        <FileCheck className="w-3.5 h-3.5" />
+                        <span>{service.requiredDocuments.length} pièces justificatives à fournir :</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
+                        {service.requiredDocuments.join(', ')}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Promo & Volume Badge */}
                   {service.promoNote && (
@@ -278,7 +307,7 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                     className="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-[#0F52BA] dark:hover:text-blue-400 flex items-center space-x-1 px-2.5 py-1.5 rounded-xl hover:bg-white dark:hover:bg-slate-700 transition-colors"
                   >
                     <Info className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                    <span>Options & Détails</span>
+                    <span>Détails & Pièces</span>
                   </button>
 
                   <div className="flex items-center space-x-2">
@@ -302,7 +331,9 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                       className={`flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
                         isAdded
                           ? 'bg-emerald-600 text-white scale-105'
-                          : 'bg-[#0F52BA] hover:brightness-110 text-white shadow-md shadow-blue-900/15'
+                          : service.category === 'administratif'
+                            ? 'bg-[#FF5E14] hover:bg-[#e04f0f] text-white shadow-md shadow-orange-900/15'
+                            : 'bg-[#0F52BA] hover:brightness-110 text-white shadow-md shadow-blue-900/15'
                       }`}
                     >
                       {isAdded ? (
@@ -312,7 +343,7 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                         </>
                       ) : (
                         <>
-                          <ShoppingBag className="w-3.5 h-3.5 text-[#FF5E14]" />
+                          <ShoppingBag className="w-3.5 h-3.5 text-white" />
                           <span>Commander</span>
                         </>
                       )}

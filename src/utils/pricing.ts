@@ -177,93 +177,85 @@ export function generateWhatsAppOrderLink(
   customerInfo?: { name?: string; phone?: string; notes?: string; urgency?: string; turnaroundOption?: TurnaroundOption }
 ): string {
   const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const waveDirectUrl = generateWavePaymentUrl(totalAmount, `Cmd Okbw ${customerInfo?.name ? '(' + customerInfo.name + ')' : ''}`);
 
-  let message = `👋 *Bonjour Okbw Bureautique et Design !*\n\n`;
-  message += `Je souhaite passer une commande via votre site web :\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  let message = `Bonjour OKBW Bureautique & Design !\n`;
+  message += `Je souhaite passer une commande :\n\n`;
 
-  cart.forEach((item, index) => {
-    message += `*${index + 1}. ${item.service.name}*\n`;
-    message += `   • Quantité : ${item.quantity} ${item.service.unitLabel}\n`;
-    message += `   • Prix unitaire : ${formatFCFA(item.unitPrice)}\n`;
-    message += `   • Total article : ${formatFCFA(item.totalPrice)}\n`;
-    if (item.customNotes) {
-      message += `   • Instructions : _${item.customNotes}_\n`;
+  if (cart.length === 1) {
+    const item = cart[0];
+    message += `- Service : ${item.service.name}\n`;
+    message += `- Quantité / Pages : ${item.quantity} (${item.service.unitLabel})\n`;
+  } else {
+    message += `- Services commandés (${cart.length}) :\n`;
+    cart.forEach((item, index) => {
+      message += `  ${index + 1}. ${item.service.name} (${item.quantity} ${item.service.unitLabel}) - ${formatFCFA(item.totalPrice)}\n`;
+    });
+  }
+
+  const clientName = customerInfo?.name?.trim() ? customerInfo.name.trim() : 'Non renseigné';
+  message += `- Nom du client : ${clientName}\n`;
+
+  if (customerInfo?.phone?.trim()) {
+    message += `- Contact / Téléphone : ${customerInfo.phone.trim()}\n`;
+  }
+
+  const detailsList: string[] = [];
+  if (customerInfo?.turnaroundOption) {
+    detailsList.push(`Délai souhaité : ${customerInfo.turnaroundOption.label} (${customerInfo.turnaroundOption.hoursDetail})`);
+  } else if (customerInfo?.urgency) {
+    detailsList.push(`Délai : ${customerInfo.urgency}`);
+  }
+
+  cart.forEach(item => {
+    if (item.customNotes?.trim()) {
+      detailsList.push(`${item.service.name}: "${item.customNotes.trim()}"`);
     }
-    if (item.files && item.files.length > 0) {
-      message += `   • Fichiers exemplaires joints (${item.files.length}) :\n`;
-      item.files.forEach(f => {
-        message += `     📎 ${f.name} (${formatFileSize(f.size)})\n`;
-      });
-    } else if (item.fileName) {
-      message += `   • Fichier exemplaire associé : 📎 ${item.fileName}\n`;
-    }
-    message += `\n`;
   });
 
-  message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `💰 *MONTANT EXACT VERROUILLÉ : ${formatFCFA(totalAmount)}*\n\n`;
-
-  if (customerInfo?.name) {
-    message += `👤 *Nom du Client* : ${customerInfo.name}\n`;
-  }
-  if (customerInfo?.phone) {
-    message += `📱 *Téléphone / WhatsApp* : ${customerInfo.phone}\n`;
-  }
-  if (customerInfo?.turnaroundOption) {
-    message += `⏱️ *Délai sélectionné* : ${customerInfo.turnaroundOption.label} (${customerInfo.turnaroundOption.hoursDetail})\n`;
-  } else if (customerInfo?.urgency) {
-    message += `⏱️ *Délai sélectionné* : ${customerInfo.urgency}\n`;
-  }
-  if (customerInfo?.notes) {
-    message += `📝 *Consignes particulières* : ${customerInfo.notes}\n`;
+  if (customerInfo?.notes?.trim()) {
+    detailsList.push(customerInfo.notes.trim());
   }
 
-  message += `\n🔒 *Lien de Paiement Wave Officiel (Montant Verrouillé ${formatFCFA(totalAmount)})* :\n`;
-  message += `👉 ${waveDirectUrl}\n\n`;
-  message += `_Ce lien intègre directement le montant exact de ${formatFCFA(totalAmount)} pour sécuriser et valider immédiatement ma commande sans risque d'erreur de montant._\n\n`;
-  message += `Merci de me confirmer la réception de mes fichiers et le lancement du travail !`;
+  const detailsText = detailsList.length > 0 ? detailsList.join(' | ') : 'Aucune instruction spécifique';
+  message += `- Détails / Instructions : ${detailsText}\n`;
+  message += `- Montant estimé : ${formatFCFA(totalAmount)}\n\n`;
+  message += `Je vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !`;
 
   const encoded = encodeURIComponent(message);
-  return `https://wa.me/2250501088608?text=${encoded}`;
+  return `https://wa.me/2250141752403?text=${encoded}`;
 }
 
 export function generateQuickServiceWhatsAppLink(
   service: ServiceItem, 
   quantity: number = 1,
-  files?: UploadedFile[],
+  customerName?: string,
+  customDetails?: string,
   turnaround?: TurnaroundOption
 ): string {
-  const { totalPrice, unitPrice, ruleApplied } = calculateServicePrice(service, quantity);
-  const waveDirectUrl = generateWavePaymentUrl(totalPrice, `Service ${service.name.slice(0, 30)}`);
+  const { totalPrice } = calculateServicePrice(service, quantity);
   
-  let message = `👋 *Bonjour Okbw Bureautique et Design !*\n\n`;
-  message += `Je souhaite commander directement la prestation suivante :\n\n`;
-  message += `📌 *Prestation* : ${service.name}\n`;
-  message += `🔢 *Quantité* : ${quantity} (${service.unitLabel})\n`;
-  message += `💵 *Montant exact verrouillé* : ${formatFCFA(totalPrice)} (${formatFCFA(unitPrice)}/unité)\n`;
-  if (ruleApplied) {
-    message += `✨ *Règle appliquée* : ${ruleApplied}\n`;
-  }
+  let message = `Bonjour OKBW Bureautique & Design !\n`;
+  message += `Je souhaite passer une commande :\n\n`;
+  message += `- Service : ${service.name}\n`;
+  message += `- Quantité / Pages : ${quantity} (${service.unitLabel})\n`;
+  
+  const clientName = customerName?.trim() ? customerName.trim() : 'Non renseigné';
+  message += `- Nom du client : ${clientName}\n`;
+
+  const detailsParts: string[] = [];
   if (turnaround) {
-    message += `⏱️ *Délai sélectionné* : ${turnaround.label} (${turnaround.hoursDetail})\n`;
-  } else {
-    message += `⏱️ *Délai estimé* : ${service.deliveryTime}\n`;
+    detailsParts.push(`Délai : ${turnaround.label} (${turnaround.hoursDetail})`);
   }
-
-  if (files && files.length > 0) {
-    message += `📁 *Fichiers exemplaires prêts (${files.length})* :\n`;
-    files.forEach(f => {
-      message += `   📎 ${f.name} (${formatFileSize(f.size)})\n`;
-    });
+  if (customDetails?.trim()) {
+    detailsParts.push(customDetails.trim());
   }
+  const detailsText = detailsParts.length > 0 ? detailsParts.join(' | ') : 'Prestation standard';
 
-  message += `\n🔒 *Lien de paiement Wave sécurisé avec montant exact (${formatFCFA(totalPrice)})* :\n`;
-  message += `👉 ${waveDirectUrl}\n\n`;
-  message += `Je transmets mes consignes et fichiers pour démarrage immédiat. Merci !`;
+  message += `- Détails / Instructions : ${detailsText}\n`;
+  message += `- Montant estimé : ${formatFCFA(totalPrice)}\n\n`;
+  message += `Je vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !`;
 
-  return `https://wa.me/2250501088608?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/2250141752403?text=${encodeURIComponent(message)}`;
 }
 
 export function getServiceById(id: string): ServiceItem | undefined {

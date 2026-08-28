@@ -51,6 +51,10 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
   // Suggested quick quantities based on service
   const getQuickPresets = () => {
     switch (selectedService.id) {
+      case 'certificat-nationalite':
+      case 'casier-judiciaire':
+      case 'pack-nationalite-casier':
+        return [1, 2, 3, 5];
       case 'saisie-texte':
         return [10, 30, 50, 75, 120];
       case 'retouche-photo':
@@ -255,13 +259,13 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
 
             <div className="flex items-center space-x-2 w-full sm:w-auto flex-wrap sm:flex-nowrap gap-y-2">
               <a
-                href={generateQuickServiceWhatsAppLink(selectedService, quantity, undefined, selectedTurnaround)}
+                href={generateQuickServiceWhatsAppLink(selectedService, quantity, undefined, undefined, selectedTurnaround)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors whitespace-nowrap"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Commander WhatsApp</span>
+                <span>Valider / Commander sur WhatsApp</span>
               </a>
 
               <button
