@@ -94,6 +94,7 @@ export function buildWhatsAppFormattedMessage(params: {
 }): string {
   const name = params.customerName?.trim() ? params.customerName.trim() : 'Non renseigné';
   const instructions = params.instructions?.trim() ? params.instructions.trim() : 'Prestation standard';
+  const wavePaymentLink = getWavePaymentUrl(params.totalAmount);
 
   let message = `Bonjour OKBW Bureautique & Design !\n`;
   message += `Voici le récapitulatif de ma commande via le Bot du site :\n\n`;
@@ -104,13 +105,14 @@ export function buildWhatsAppFormattedMessage(params: {
   
   if (params.isAdministrative) {
     message += `• Montant total : ${formatFCFA(params.totalAmount)}\n`;
-    message += `• Modalité : Règlement à l'enregistrement (Timbres fiscaux & greffe) • Reçu officiel immédiat dès paiement • Retrait physique sous 72h\n\n`;
-    message += `Je vous joins les photos/scans de mes pièces justificatives ci-dessous dans cette discussion.\n`;
-    message += `(J'attends la confirmation de la commande pour recevoir le lien de paiement Wave Business).`;
+    message += `• Modalité : Règlement à l'enregistrement (Timbres fiscaux & greffe) • Reçu officiel immédiat dès paiement • Retrait physique sous 72h\n`;
+    message += `• Lien de paiement sécurisé Wave : ${wavePaymentLink}\n\n`;
+    message += `Je vous joins les photos/scans de mes pièces justificatives ci-dessous dans cette discussion.`;
   } else {
-    message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
+    message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n`;
+    message += `• Lien de paiement sécurisé Wave : ${wavePaymentLink}\n\n`;
     message += `Je vous joins mes fichiers ci-dessous dans cette discussion.\n`;
-    message += `(J'attends la finalisation du travail pour recevoir le lien de paiement Wave Business).`;
+    message += `(Règlement via le lien Wave ci-dessus dès validation de l'aperçu).`;
   }
 
   return message;

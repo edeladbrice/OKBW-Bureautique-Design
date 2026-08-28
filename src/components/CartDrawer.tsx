@@ -29,7 +29,8 @@ import {
   generateWhatsAppOrderLink, 
   TURNAROUND_OPTIONS,
   ADMINISTRATIVE_LOCKED_TURNAROUND,
-  hasAdministrativeService
+  hasAdministrativeService,
+  getWavePaymentUrl
 } from '../utils/pricing';
 import { TurnaroundSelector } from './TurnaroundSelector';
 
@@ -339,7 +340,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           <p><strong className="text-slate-900 dark:text-white">• Quantité / Pages :</strong> {totalQtyText}</p>
                           <p><strong className="text-slate-900 dark:text-white">• Nom du client :</strong> <span className={customerName.trim() ? "text-blue-600 dark:text-blue-400 font-semibold" : "italic text-slate-400 dark:text-slate-500"}>{customerName.trim() || 'Non renseigné'}</span></p>
                           <p><strong className="text-slate-900 dark:text-white">• Instructions :</strong> {instructionsSummary}</p>
-                          <p><strong className="text-slate-900 dark:text-white">• Montant total :</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalAmount)}</span></p>
+                          <p><strong className="text-slate-900 dark:text-white">{hasAdmin ? "• Montant total :" : "• Montant à régler :"}</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalAmount)}</span></p>
+                          <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold truncate"><strong className="text-slate-900 dark:text-white">• Lien Wave :</strong> https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/</p>
                         </div>
 
                         {hasAdmin ? (
@@ -350,7 +352,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         ) : (
                           <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">
                             Je vous joins mes fichiers ci-dessous dans cette discussion.<br />
-                            (J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).
+                            (Règlement via le lien Wave ci-dessus dès validation de l'aperçu).
                           </p>
                         )}
                       </div>
@@ -373,7 +375,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Drawer Footer & Checkout CTAs */}
           {cart.length > 0 && (
-            <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 space-y-3.5">
+            <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 space-y-3">
               
               {/* Total Calculation Display */}
               <div className="flex items-center justify-between">
@@ -392,13 +394,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <button
                 id="cart-whatsapp-checkout-btn"
                 onClick={handleWhatsAppCheckout}
-                className="w-full py-4 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-950/20 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-950/20 transition-all flex items-center justify-center space-x-2"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>{hasAdmin ? "Valider la commande & démarches sur WhatsApp" : "Valider la commande sur WhatsApp"}</span>
               </button>
 
-              <div className="flex items-center justify-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+              {/* Direct Wave Pay Button */}
+              <a
+                id="cart-wave-direct-btn"
+                href={getWavePaymentUrl(totalAmount)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-4 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center space-x-2"
+              >
+                <Sparkles className="w-4 h-4 text-sky-200" />
+                <span>Payer directement via Wave ({formatFCFA(totalAmount)})</span>
+              </a>
+
+              <div className="flex items-center justify-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Garantie de satisfaction Okbw & Délais d'exécution certifiés</span>
               </div>

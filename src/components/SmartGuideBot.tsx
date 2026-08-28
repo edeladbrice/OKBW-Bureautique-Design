@@ -44,7 +44,8 @@ import {
   ADMINISTRATIVE_LOCKED_TURNAROUND, 
   isAdministrativeService,
   buildWhatsAppFormattedMessage,
-  PRIMARY_WHATSAPP_NUMBER
+  PRIMARY_WHATSAPP_NUMBER,
+  getWavePaymentUrl
 } from '../utils/pricing';
 import { 
   BotMessage, 
@@ -817,22 +818,34 @@ Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et
                       </div>
                     </div>
 
-                    {/* Direct WhatsApp CTA Button */}
-                    <div className="mt-4 pt-2">
+                    {/* Action Buttons: WhatsApp & Direct Wave */}
+                    <div className="mt-4 pt-2 space-y-2">
                       <a
                         id="btn-whatsapp-order-confirm"
                         href={msg.widgetData.whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5"
+                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5"
                       >
                         <MessageSquare className="w-5 h-5 fill-white/20" />
                         <span>Valider et envoyer sur WhatsApp</span>
                         <ArrowRight className="w-4 h-4 ml-1" />
                       </a>
 
-                      <p className="mt-2 text-center text-[11px] text-slate-500 dark:text-slate-400">
-                        📱 Ouvre votre discussion WhatsApp avec le message structuré pré-rempli.
+                      <a
+                        id="btn-wave-order-confirm"
+                        href={getWavePaymentUrl(msg.widgetData.totalPrice)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold text-xs shadow-sm transition-all"
+                      >
+                        <Sparkles className="w-4 h-4 text-sky-200" />
+                        <span>Payer directement via Wave ({formatFCFA(msg.widgetData.totalPrice)})</span>
+                        <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
+                      </a>
+
+                      <p className="mt-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                        📱 Votre message WhatsApp inclut automatiquement le récapitulatif complet et votre lien de paiement Wave.
                       </p>
                     </div>
                   </div>

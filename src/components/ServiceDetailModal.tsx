@@ -365,7 +365,8 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                   <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Quantité / Dossiers :" : "• Quantité / Pages :"}</strong> {quantity} ({service.unitLabel})</p>
                   <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Nom du demandeur :" : "• Nom du client :"}</strong> <span className={customerName.trim() ? "text-blue-600 dark:text-blue-400 font-semibold" : "italic text-slate-400 dark:text-slate-500"}>{customerName.trim() || 'Non renseigné'}</span></p>
                   <p><strong className="text-slate-900 dark:text-white">• Instructions :</strong> {customNotes.trim() ? customNotes.trim() : 'Prestation standard'}</p>
-                  <p><strong className="text-slate-900 dark:text-white">• Montant total :</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalPrice)}</span></p>
+                  <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Montant total :" : "• Montant à régler :"}</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalPrice)}</span></p>
+                  <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold truncate"><strong className="text-slate-900 dark:text-white">• Lien Wave :</strong> https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/</p>
                 </div>
 
                 {isAdministrative ? (
@@ -378,7 +379,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                 ) : (
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">
                     Je vous joins mes fichiers ci-dessous dans cette discussion.<br />
-                    (J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).
+                    (Règlement via le lien Wave ci-dessus dès validation de l'aperçu).
                   </p>
                 )}
               </div>
