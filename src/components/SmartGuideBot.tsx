@@ -24,7 +24,15 @@ import {
   Layers,
   FileCheck2,
   Zap,
-  Info
+  Info,
+  GraduationCap,
+  Palette,
+  Globe,
+  FileEdit,
+  School,
+  CreditCard,
+  Check,
+  Edit3
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ServiceItem, TurnaroundOption } from '../types';
@@ -32,21 +40,23 @@ import { SERVICES_DATA, CONTACT_INFO } from '../data/servicesData';
 import { 
   calculateServicePrice, 
   formatFCFA, 
-  generateQuickServiceWhatsAppLink, 
   TURNAROUND_OPTIONS, 
-  ADMINISTRATIVE_LOCKED_TURNAROUND,
+  ADMINISTRATIVE_LOCKED_TURNAROUND, 
   isAdministrativeService,
+  buildWhatsAppFormattedMessage,
+  PRIMARY_WHATSAPP_NUMBER,
   DISPLAY_CONTACTS
 } from '../utils/pricing';
 import { 
   BotMessage, 
   BotQuickReply, 
   GREETING_MESSAGE, 
-  INITIAL_QUICK_REPLIES, 
+  INITIAL_POLE_REPLIES, 
   processUserQuery, 
-  StepWizardState,
+  POLES_CONFIG,
+  DecisionTreeStep,
   CLIENT_SCENARIOS,
-  IVORIAN_TRIBUNALS
+  buildStateOrderWhatsAppUrl
 } from '../utils/guideBotEngine';
 
 interface SmartGuideBotProps {
@@ -57,6 +67,20 @@ interface SmartGuideBotProps {
   onAddToCart: (service: ServiceItem, quantity: number, notes?: string) => void;
   onScrollToCatalog: () => void;
   initialQuery?: string;
+  initialTopic?: string;
+}
+
+interface TreeState {
+  step: DecisionTreeStep;
+  poleId?: string;
+  service?: ServiceItem;
+  quantity: number;
+  specialDetail?: string;
+  customerName?: string;
+  totalPrice?: number;
+  unitPrice?: number;
+  savings?: number;
+  ruleApplied?: string;
 }
 
 export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
@@ -66,21 +90,19 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
   onOpenCalculatorModal,
   onAddToCart,
   onScrollToCatalog,
-  initialQuery
+  initialQuery,
+  initialTopic
 }) => {
   const [messages, setMessages] = useState<BotMessage[]>([GREETING_MESSAGE]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const lastProcessedQueryRef = useRef<string | undefined>(undefined);
-
-  // Guided Wizard State
-  const [wizardState, setWizardState] = useState<StepWizardState | null>(null);
+  const [treeState, setTreeState] = useState<TreeState | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastProcessedRef = useRef<string | undefined>(undefined);
 
-  // Auto scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -90,27 +112,36 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 150);
 
-      // If an initialQuery was passed and hasn't been sent yet for this open session
-      if (initialQuery && initialQuery !== lastProcessedQueryRef.current) {
-        lastProcessedQueryRef.current = initialQuery;
-        setTimeout(() => {
-          handleSendMessage(initialQuery);
-        }, 200);
+      const triggerKey = initialTopic || initialQuery;
+      if (triggerKey && triggerKey !== lastProcessedRef.current) {
+        lastProcessedRef.current = triggerKey;
+        
+        // If topic matches a pole
+        const matchingPole = POLES_CONFIG.find(p => p.id === triggerKey || p.services.includes(triggerKey));
+        if (matchingPole) {
+          if (matchingPole.services.includes(triggerKey)) {
+            handleSelectServiceDirect(triggerKey);
+          } else {
+            handleSelectPole(matchingPole.id);
+          }
+        } else if (initialQuery) {
+          setTimeout(() => handleSendMessage(initialQuery), 200);
+        }
       }
     } else {
-      lastProcessedQueryRef.current = undefined;
+      lastProcessedRef.current = undefined;
     }
-  }, [isOpen, initialQuery]);
+  }, [isOpen, initialQuery, initialTopic]);
 
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [messages, isTyping, wizardState]);
+  }, [messages, isTyping, treeState]);
 
-  // Restart chat
+  // Restart chat / Reset State Machine
   const handleResetChat = () => {
-    setWizardState(null);
+    setTreeState(null);
     setMessages([
       {
         ...GREETING_MESSAGE,
@@ -120,12 +151,414 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
     ]);
   };
 
-  // Add a user message and trigger bot response
+  // --- STATE MACHINE TRANSITIONS ---
+
+  // 1. ÉTAPE 1 : Choix du Pôle
+  const handleSelectPole = (poleId: string) => {
+    const pole = POLES_CONFIG.find(p => p.id === poleId);
+    if (!pole) return;
+
+    setTreeState({
+      step: 'SERVICE_SELECT',
+      poleId: pole.id,
+      quantity: 1
+    });
+
+    const poleServices = SERVICES_DATA.filter(s => pole.services.includes(s.id));
+
+    // Special custom labels per requested design
+    const nextMsg: BotMessage = {
+      id: `bot_pole_${Date.now()}`,
+      sender: 'bot',
+      text: `📂 Pôle sélectionné : ${pole.label}\n\nQuel service souhaitez-vous commander ? Choisissez parmi les options ci-dessous :`,
+      timestamp: new Date(),
+      quickReplies: poleServices.map(s => {
+        let label = `${s.name} (${s.priceDisplay})`;
+        if (s.id === 'cv-premium') label = 'CV Pro (1 000 F)';
+        if (s.id === 'cv-standard') label = 'CV Standard (500 F)';
+        if (s.id === 'saisie-texte') label = 'Saisie de texte & Mémoires';
+        if (s.id === 'lettre-motivation') label = 'Lettre de motivation (500 F)';
+        if (s.id === 'presentation-powerpoint') label = 'PowerPoint (2 500 F)';
+        if (s.id === 'modification-pdf') label = 'Modification de PDF';
+        if (s.id === 'conversion-simple') label = 'Conversion simple (250 F)';
+        if (s.id === 'conversion-correction') label = 'Conversion + Correction';
+        if (s.id === 'retouche-photo') label = 'Retouche Photo';
+        if (s.id === 'creation-affiche') label = 'Création d\'Affiche';
+        if (s.id === 'creation-logo') label = 'Création de Logo (3 500 F)';
+        if (s.id === 'carte-de-visite') label = 'Carte de Visite (2 000 F)';
+        if (s.id === 'web-vitrine') label = 'Site Vitrine 1 page (35 000 F)';
+        if (s.id === 'web-multipage') label = 'Site E-commerce / Multi-pages (75 000 F)';
+        if (s.id === 'app-pwa') label = 'Application Mobile (60 000 F)';
+        if (s.id === 'app-sur-mesure') label = 'Dépannage / Projet sur-mesure';
+        if (s.id === 'inscription-privee') label = 'Établissement Privé / Semi-Privé (3 500 F)';
+        if (s.id === 'inscription-publique') label = 'Établissement Public & MENA (6 500 F)';
+        if (s.id === 'pack-nationalite-casier') label = 'Pack Duo Nationalité + Casier (6 500 F)';
+        if (s.id === 'certificat-nationalite') label = 'Certificat de Nationalité (3 500 F)';
+        if (s.id === 'casier-judiciaire') label = 'Casier Judiciaire (3 500 F)';
+
+        return {
+          id: `srv_${s.id}`,
+          label,
+          action: 'select_service',
+          payload: s.id,
+          primary: s.recommended
+        };
+      })
+    };
+
+    setMessages(prev => [...prev, nextMsg]);
+  };
+
+  // 2. ÉTAPE 2 : Choix du Service & Branche de Questions
+  const handleSelectService = (serviceId: string) => {
+    const service = SERVICES_DATA.find(s => s.id === serviceId);
+    if (!service) return;
+
+    // Determine initial quantity and state step according to branch
+    let initialQty = 1;
+    let nextStep: DecisionTreeStep = 'QUANTITY_SELECT';
+    let questionText = '';
+    let quickReplies: BotQuickReply[] = [];
+
+    // --- BRANCHE 1 : BUREAUTIQUE & DOCUMENTS ---
+    if (service.id === 'saisie-texte') {
+      initialQty = 25;
+      nextStep = 'QUANTITY_SELECT';
+      questionText = `📄 Saisie de texte & Mémoires\n\nCombien de pages comporte votre document manuscrit ou texte ?\n\n(Le tarif dégressif s'applique automatiquement : 250 F/page, ou 200 F/page au-delà de 50 pages).`;
+      quickReplies = [
+        { id: 'qty_10', label: '10 pages (2 500 F)', action: 'set_quantity', payload: 10 },
+        { id: 'qty_25', label: '25 pages (6 250 F)', action: 'set_quantity', payload: 25 },
+        { id: 'qty_50', label: '50 pages (12 500 F)', action: 'set_quantity', payload: 50 },
+        { id: 'qty_75', label: '75 pages (15 000 F - Promo 200F)', action: 'set_quantity', payload: 75, primary: true },
+        { id: 'qty_100', label: '100 pages (20 000 F - Promo 200F)', action: 'set_quantity', payload: 100, primary: true }
+      ];
+    } else if (service.id === 'presentation-powerpoint') {
+      initialQty = 1;
+      nextStep = 'QUANTITY_SELECT';
+      questionText = `📊 Diaporama PowerPoint (Soutenance / Pro)\n\nCombien de diapositives souhaitez-vous ?\n\n(Le forfait de base à 2 500 F couvre jusqu'à 15 diapositives complètes avec mise en page et transitions).`;
+      quickReplies = [
+        { id: 'ppt_15', label: 'Jusqu\'à 15 slides (2 500 F)', action: 'set_quantity', payload: 1, primary: true },
+        { id: 'ppt_20', label: '16 à 25 slides (3 500 F)', action: 'set_quantity_custom_price', payload: { qty: 1, price: 3500, detail: '16 à 25 diapositives' } },
+        { id: 'ppt_35', label: '26 à 40 slides (5 000 F)', action: 'set_quantity_custom_price', payload: { qty: 1, price: 5000, detail: '26 à 40 diapositives' } }
+      ];
+    } else if (service.id === 'cv-premium' || service.id === 'cv-standard' || service.id === 'lettre-motivation') {
+      initialQty = 1;
+      nextStep = 'SPECIAL_PROMPT';
+      const isPremium = service.id === 'cv-premium';
+      questionText = `💼 ${service.name}\n\nTarif : ${service.priceDisplay}${isPremium ? '\n✨ Inclus : Design moderne + Costume virtuel sur votre photo + Fond blanc net.' : ''}\n\nAvez-vous des précisions sur votre profil ou domaine d'activité ?`;
+      quickReplies = [
+        { id: 'cv_std_direct', label: '🚀 Profil standard / Candidature générale', action: 'set_special_detail', payload: 'Candidature générale', primary: true },
+        { id: 'cv_cadre', label: '👔 Profil Cadre / Gestion / Finance', action: 'set_special_detail', payload: 'Poste Cadre / Management' },
+        { id: 'cv_tech', label: '💻 Profil Technique / Informatique / Ingénierie', action: 'set_special_detail', payload: 'Profil Technique / IT' },
+        { id: 'cv_pass', label: 'Passer cette précision', action: 'set_special_detail', payload: 'Prestation standard' }
+      ];
+    } 
+
+    // --- BRANCHE 2 : SOLUTIONS PDF & CONVERSION ---
+    else if (service.id === 'modification-pdf' || service.id === 'conversion-correction') {
+      initialQty = 1;
+      nextStep = 'QUANTITY_SELECT';
+      const isModif = service.id === 'modification-pdf';
+      questionText = `📝 ${service.name}\n\nCombien de pages / documents avez-vous à traiter ?\n\n(Tarifs dégressifs appliqués en direct : ${isModif ? '500 F (1-4p), 250 F (5-9p), 150 F (10+p)' : '500 F (1-4u), 250 F (5-19u), 200 F (20-29u), 150 F (30-39u)'})`;
+      quickReplies = [
+        { id: 'pdf_1', label: '1 page / document (500 F)', action: 'set_quantity', payload: 1 },
+        { id: 'pdf_3', label: '3 pages (1 500 F)', action: 'set_quantity', payload: 3 },
+        { id: 'pdf_5', label: '5 pages (1 250 F - 250F/p)', action: 'set_quantity', payload: 5, primary: true },
+        { id: 'pdf_10', label: '10 pages (1 500 F - 150F/p)', action: 'set_quantity', payload: 10, primary: true },
+        { id: 'pdf_20', label: '20 pages (3 000 F - 150F/p)', action: 'set_quantity', payload: 20 }
+      ];
+    } else if (service.id === 'conversion-simple') {
+      initialQty = 1;
+      nextStep = 'QUANTITY_SELECT';
+      questionText = `🔄 Conversion simple (PDF ↔ Word/Excel)\n\nCombien de fichiers souhaitez-vous convertir ? (250 F par document)`;
+      quickReplies = [
+        { id: 'conv_1', label: '1 document (250 F)', action: 'set_quantity', payload: 1, primary: true },
+        { id: 'conv_2', label: '2 documents (500 F)', action: 'set_quantity', payload: 2 },
+        { id: 'conv_4', label: '4 documents (1 000 F)', action: 'set_quantity', payload: 4 }
+      ];
+    }
+
+    // --- BRANCHE 3 : DESIGN & IMAGE ---
+    else if (service.id === 'retouche-photo') {
+      initialQty = 5;
+      nextStep = 'QUANTITY_SELECT';
+      questionText = `🎨 Retouche & Restauration Photo\n\nCombien de visuels souhaitez-vous restaurer ?\n\n(Packs dégressifs : 1 500 F le pack 5 photos, 300 F/photo de 6 à 9, 250 F/photo dès 10 photos).`;
+      quickReplies = [
+        { id: 'ret_5', label: 'Pack 5 photos (1 500 F forfaitaire)', action: 'set_quantity', payload: 5, primary: true },
+        { id: 'ret_8', label: '8 photos (2 400 F - 300F/u)', action: 'set_quantity', payload: 8 },
+        { id: 'ret_10', label: '10 photos (2 500 F - 250F/u)', action: 'set_quantity', payload: 10, primary: true },
+        { id: 'ret_15', label: '15 photos (3 750 F - 250F/u)', action: 'set_quantity', payload: 15 }
+      ];
+    } else if (service.id === 'creation-affiche') {
+      initialQty = 1;
+      nextStep = 'QUANTITY_SELECT';
+      questionText = `🎨 Création d'Affiche (Pub / Événement)\n\nCombien de visuels souhaitez-vous ?\n\n(Tarifs : 1 affiche = 2 500 F | Pack 3 affiches = 3 000 F (1 000 F/u) | Pack 10 affiches = 5 000 F (500 F/u)).`;
+      quickReplies = [
+        { id: 'aff_1', label: '1 affiche (2 500 F)', action: 'set_quantity', payload: 1 },
+        { id: 'aff_3', label: 'Pack 3 affiches (3 000 F - 1 000F/u)', action: 'set_quantity', payload: 3, primary: true },
+        { id: 'aff_5', label: 'Pack 5 affiches (5 000 F)', action: 'set_quantity', payload: 5 },
+        { id: 'aff_10', label: 'Pack 10 affiches (5 000 F - 500F/u)', action: 'set_quantity', payload: 10, primary: true }
+      ];
+    } else if (service.id === 'creation-logo') {
+      initialQty = 1;
+      nextStep = 'SPECIAL_PROMPT';
+      questionText = `🎨 Création de Logo Sur-Mesure (3 500 F)\n\nQuel est le nom de votre entreprise/projet et votre secteur d'activité ?\n\n(Indiquez-le ci-dessous ou sélectionnez une suggestion rapide).`;
+      quickReplies = [
+        { id: 'logo_com', label: 'Boutique / E-commerce / Vente', action: 'set_special_detail', payload: 'Boutique / Commerce' },
+        { id: 'logo_resto', label: 'Restaurant / Agroalimentaire / Food', action: 'set_special_detail', payload: 'Restauration / Alimentation' },
+        { id: 'logo_serv', label: 'Prestation de Services / BTP / Agence', action: 'set_special_detail', payload: 'Prestations de Services' },
+        { id: 'logo_custom', label: 'Je tape mon nom & secteur dans le chat', action: 'focus_input' }
+      ];
+    } else if (service.id === 'carte-de-visite') {
+      initialQty = 1;
+      nextStep = 'QUANTITY_SELECT';
+      questionText = `💳 Design Carte de Visite (2 000 F)\n\nCombien de déclinaisons ou modèles de cartes de visite souhaitez-vous ?`;
+      quickReplies = [
+        { id: 'cdv_1', label: '1 modèle Recto/Verso (2 000 F)', action: 'set_quantity', payload: 1, primary: true },
+        { id: 'cdv_2', label: '2 modèles / collaborateurs (4 000 F)', action: 'set_quantity', payload: 2 },
+        { id: 'cdv_4', label: '4 modèles / collaborateurs (8 000 F)', action: 'set_quantity', payload: 4 }
+      ];
+    }
+
+    // --- BRANCHE 4 : DÉVELOPPEMENT WEB & APPS ---
+    else if (service.category === 'web') {
+      initialQty = 1;
+      nextStep = 'SPECIAL_PROMPT';
+      questionText = `💻 ${service.name} (${service.priceDisplay})\n\nDécrivez brièvement votre projet ou votre besoin (type d'activité, fonctionnalités nécessaires, délais).`;
+      quickReplies = [
+        { id: 'web_pres', label: 'Présentation d\'activité & Contact WhatsApp', action: 'set_special_detail', payload: 'Site vitrine entreprise avec WhatsApp', primary: true },
+        { id: 'web_shop', label: 'Boutique en ligne avec paiement Wave & Mobile Money', action: 'set_special_detail', payload: 'E-commerce Wave / MoMo' },
+        { id: 'web_pwa', label: 'Application mobile installable pour clients', action: 'set_special_detail', payload: 'Application mobile PWA' },
+        { id: 'web_desc', label: 'Je décris mon projet dans le chat', action: 'focus_input' }
+      ];
+    }
+
+    // --- BRANCHE 5 : INSCRIPTION EN LIGNE SCOLAIRE ---
+    else if (service.category === 'scolaire') {
+      initialQty = 1;
+      nextStep = 'SPECIAL_PROMPT';
+      questionText = `🎓 ${service.name}\n\nTarif fixe : ${service.priceDisplay} pour tout niveau secondaire (6ème à Tle).\n\nPour quelle classe (de la 6ème à la Tle) et quel établissement souhaitez-vous faire l'inscription ?`;
+      quickReplies = [
+        { id: 'scol_col_6_5', label: 'Collège : 6ème / 5ème', action: 'set_special_detail', payload: 'Collège (6ème / 5ème)', primary: true },
+        { id: 'scol_col_4_3', label: 'Collège : 4ème / 3ème', action: 'set_special_detail', payload: 'Collège (4ème / 3ème)' },
+        { id: 'scol_lyc_2_1', label: 'Lycée : 2nde / 1ère', action: 'set_special_detail', payload: 'Lycée (2nde / 1ère)' },
+        { id: 'scol_lyc_tle', label: 'Lycée : Terminale', action: 'set_special_detail', payload: 'Lycée (Terminale)', primary: true },
+        { id: 'scol_prec', label: 'Préciser mon établissement & classe dans le chat', action: 'focus_input' }
+      ];
+    }
+
+    // --- BRANCHE 6 : ACTES JUDICIAIRES (CASIER / NATIONALITÉ) ---
+    else if (isAdministrativeService(service)) {
+      initialQty = 1;
+      nextStep = 'CUSTOMER_NAME';
+      questionText = `⚖️ ${service.name}\n\nTarif officiel : ${service.priceDisplay}\n\n🏛️ Procédure légale officielle :\n1️⃣ Règlement de la demande requis à l'enregistrement pour les timbres fiscaux d'État.\n2️⃣ Reçu officiel immédiat dès confirmation.\n3️⃣ Retrait physique du document original au tribunal sous 72h (3 jours ouvrés).\n\nQuel est votre Nom & Prénom (demandeur) ?`;
+      quickReplies = [
+        { id: 'adm_enter_name', label: 'Indiquer mon nom & prénom dans le chat', action: 'focus_input', primary: true }
+      ];
+    }
+
+    // Default calculations
+    const pricing = calculateServicePrice(service, initialQty);
+
+    setTreeState({
+      step: nextStep,
+      service,
+      quantity: initialQty,
+      totalPrice: pricing.totalPrice,
+      unitPrice: pricing.unitPrice,
+      savings: pricing.savings,
+      ruleApplied: pricing.ruleApplied
+    });
+
+    const nextMsg: BotMessage = {
+      id: `bot_q_${Date.now()}`,
+      sender: 'bot',
+      text: questionText,
+      timestamp: new Date(),
+      quickReplies
+    };
+
+    setMessages(prev => [...prev, nextMsg]);
+  };
+
+  // Direct service selection from shortcuts
+  const handleSelectServiceDirect = (serviceId: string) => {
+    handleSelectService(serviceId);
+  };
+
+  // 3. Traitement de la Quantité
+  const handleSetQuantity = (qty: number) => {
+    if (!treeState?.service) return;
+    const service = treeState.service;
+    const pricing = calculateServicePrice(service, qty);
+
+    setTreeState(prev => ({
+      ...prev!,
+      quantity: qty,
+      totalPrice: pricing.totalPrice,
+      unitPrice: pricing.unitPrice,
+      savings: pricing.savings,
+      ruleApplied: pricing.ruleApplied
+    }));
+
+    // If PDF service, ask for special instructions before customer name
+    if (service.id === 'modification-pdf' || service.id === 'conversion-correction') {
+      setTreeState(prev => ({ ...prev!, step: 'SPECIAL_PROMPT' }));
+
+      const nextMsg: BotMessage = {
+        id: `bot_inst_${Date.now()}`,
+        sender: 'bot',
+        text: `💰 Montant calculé pour ${qty} ${service.unitLabel} : ${formatFCFA(pricing.totalPrice)}\n\nAvez-vous des consignes particulières (ex: changer une date, corriger un nom, retoucher des pages) ?`,
+        timestamp: new Date(),
+        quickReplies: [
+          { id: 'inst_none', label: 'Aucune consigne particulière / Standard', action: 'set_special_detail', payload: 'Standard / sans consigne spéciale', primary: true },
+          { id: 'inst_date', label: 'Changement de date & noms', action: 'set_special_detail', payload: 'Changer date et noms' },
+          { id: 'inst_text', label: 'Correction de textes & chiffres', action: 'set_special_detail', payload: 'Correction textes et montants' },
+          { id: 'inst_chat', label: 'Je saisis mes consignes dans le chat', action: 'focus_input' }
+        ]
+      };
+      setMessages(prev => [...prev, nextMsg]);
+      return;
+    }
+
+    // Otherwise move directly to customer name
+    setTreeState(prev => ({ ...prev!, step: 'CUSTOMER_NAME' }));
+
+    const nextMsg: BotMessage = {
+      id: `bot_name_ask_${Date.now()}`,
+      sender: 'bot',
+      text: `💰 Montant estimé pour ${qty} ${service.unitLabel} : ${formatFCFA(pricing.totalPrice)}${pricing.savings ? `\n🎉 Économie appliquée : ${formatFCFA(pricing.savings)}` : ''}\n\nQuel est votre Nom & Prénom pour préparer votre commande ?`,
+      timestamp: new Date(),
+      quickReplies: [
+        { id: 'name_input_prompt', label: 'Taper mon nom et prénom ci-dessous', action: 'focus_input', primary: true }
+      ]
+    };
+    setMessages(prev => [...prev, nextMsg]);
+  };
+
+  // Custom price / quantity setter (e.g. for PowerPoint packages)
+  const handleSetQuantityCustomPrice = (payload: { qty: number; price: number; detail: string }) => {
+    if (!treeState?.service) return;
+    const service = treeState.service;
+
+    setTreeState(prev => ({
+      ...prev!,
+      quantity: payload.qty,
+      totalPrice: payload.price,
+      unitPrice: payload.price,
+      specialDetail: payload.detail,
+      step: 'CUSTOMER_NAME'
+    }));
+
+    const nextMsg: BotMessage = {
+      id: `bot_custom_p_${Date.now()}`,
+      sender: 'bot',
+      text: `💰 Option choisie : ${payload.detail} — Montant : ${formatFCFA(payload.price)}\n\nQuel est votre Nom & Prénom ?`,
+      timestamp: new Date(),
+      quickReplies: [
+        { id: 'name_input_prompt_2', label: 'Taper mon nom et prénom ci-dessous', action: 'focus_input', primary: true }
+      ]
+    };
+    setMessages(prev => [...prev, nextMsg]);
+  };
+
+  // 4. Traitement des Précisions & Consignes
+  const handleSetSpecialDetail = (detail: string) => {
+    setTreeState(prev => ({
+      ...prev!,
+      specialDetail: detail,
+      step: 'CUSTOMER_NAME'
+    }));
+
+    const nextMsg: BotMessage = {
+      id: `bot_name_ask_det_${Date.now()}`,
+      sender: 'bot',
+      text: `✅ Consigne enregistrée : "${detail}"\n\nQuel est votre Nom & Prénom ?`,
+      timestamp: new Date(),
+      quickReplies: [
+        { id: 'name_prompt_3', label: 'Taper mon nom et prénom ci-dessous', action: 'focus_input', primary: true }
+      ]
+    };
+    setMessages(prev => [...prev, nextMsg]);
+  };
+
+  // 5. Finalisation & Génération de la Synthèse WhatsApp (ÉTAPE 3)
+  const handleCompleteOrder = (customerName: string) => {
+    if (!treeState?.service) return;
+    const service = treeState.service;
+    const qty = treeState.quantity || 1;
+    const finalName = customerName.trim() || 'Client';
+    const instructions = treeState.specialDetail || 'Prestation standard';
+    const isAdm = isAdministrativeService(service);
+
+    const pricing = calculateServicePrice(service, qty);
+    const totalPrice = treeState.totalPrice || pricing.totalPrice;
+
+    const whatsappUrl = buildStateOrderWhatsAppUrl({
+      service,
+      quantity: qty,
+      customerName: finalName,
+      instructions,
+      totalPrice
+    });
+
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.8 }
+      });
+    } catch {
+      // ignore
+    }
+
+    const nextTreeState: TreeState = {
+      ...treeState,
+      customerName: finalName,
+      totalPrice,
+      step: 'ORDER_SUMMARY'
+    };
+    setTreeState(nextTreeState);
+
+    const summaryText = `Parfait ! Voici le récapitulatif de votre commande :
+
+• Service : ${service.name}
+• Quantité : ${qty} ${service.unitLabel}
+• Nom du client : ${finalName}
+• Instructions : ${instructions}
+• Total estimé : ${formatFCFA(totalPrice)}
+
+Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et joindre vos fichiers !`;
+
+    const summaryMsg: BotMessage = {
+      id: `bot_summary_${Date.now()}`,
+      sender: 'bot',
+      text: summaryText,
+      timestamp: new Date(),
+      widgetType: 'order_summary',
+      widgetData: {
+        service,
+        quantity: qty,
+        customerName: finalName,
+        instructions,
+        totalPrice,
+        whatsappUrl,
+        isAdministrative: isAdm
+      },
+      quickReplies: [
+        { id: 'restart_tree', label: '🔄 Passer une autre commande', action: 'restart_bot' },
+        { id: 'see_catalog', label: '👀 Voir le catalogue complet', action: 'scroll_catalog' }
+      ]
+    };
+
+    setMessages(prev => [...prev, summaryMsg]);
+  };
+
+  // Envoi de message utilisateur libre ou gestion des étapes de texte
   const handleSendMessage = (textToSend?: string) => {
     const query = (textToSend || inputText).trim();
     if (!query) return;
 
-    // Add user message
     const userMsg: BotMessage = {
       id: `user_${Date.now()}`,
       sender: 'user',
@@ -138,49 +571,81 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
     setIsTyping(true);
 
     setTimeout(() => {
-      // If currently in details step of the state machine, capture the user's input as customer name / notes
-      if (wizardState && wizardState.step === 'details') {
-        const lines = query.split('\n').map(l => l.trim()).filter(Boolean);
-        const nameInput = lines[0] || query;
-        const notesInput = lines.length > 1 ? lines.slice(1).join(' | ') : '';
-        handleWizardFinish(nameInput, notesInput);
+      // If state machine is waiting for Customer Name
+      if (treeState && treeState.step === 'CUSTOMER_NAME') {
+        handleCompleteOrder(query);
         setIsTyping(false);
         return;
       }
 
-      // If currently in quantity step and user typed a number
-      if (wizardState && wizardState.step === 'quantity') {
+      // If state machine is waiting for Special prompt / detail
+      if (treeState && treeState.step === 'SPECIAL_PROMPT') {
+        handleSetSpecialDetail(query);
+        setIsTyping(false);
+        return;
+      }
+
+      // If state machine is waiting for quantity and user typed a number
+      if (treeState && treeState.step === 'QUANTITY_SELECT') {
         const num = parseInt(query.replace(/\D/g, ''), 10);
         if (!isNaN(num) && num > 0) {
-          handleWizardSetQuantity(num);
+          handleSetQuantity(num);
           setIsTyping(false);
           return;
         }
       }
 
-      const botResponse = processUserQuery(query, wizardState || undefined);
+      // Freeform processor
+      const botResponse = processUserQuery(query);
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
-    }, 450);
+    }, 350);
   };
 
-  // Handle Quick Action clicks
+  // Dispatch Quick Reply Clicks
   const handleQuickAction = (reply: BotQuickReply) => {
-    if (reply.action === 'start_wizard') {
-      startGuidedWizard();
+    if (reply.action === 'select_pole') {
+      handleSelectPole(reply.payload);
       return;
     }
 
-    if (reply.action === 'open_calc_modal') {
-      onOpenCalculatorModal(reply.payload);
+    if (reply.action === 'select_service') {
+      handleSelectService(reply.payload);
       return;
     }
 
-    if (reply.action === 'open_service_detail') {
-      const service = SERVICES_DATA.find(s => s.id === reply.payload);
-      if (service) {
-        onOpenServiceModal(service);
-      }
+    if (reply.action === 'select_service_direct') {
+      handleSelectServiceDirect(reply.payload);
+      return;
+    }
+
+    if (reply.action === 'set_quantity') {
+      handleSetQuantity(reply.payload);
+      return;
+    }
+
+    if (reply.action === 'set_quantity_custom_price') {
+      handleSetQuantityCustomPrice(reply.payload);
+      return;
+    }
+
+    if (reply.action === 'set_special_detail') {
+      handleSetSpecialDetail(reply.payload);
+      return;
+    }
+
+    if (reply.action === 'focus_input') {
+      setTimeout(() => inputRef.current?.focus(), 100);
+      return;
+    }
+
+    if (reply.action === 'restart_bot') {
+      handleResetChat();
+      return;
+    }
+
+    if (reply.action === 'show_poles') {
+      handleResetChat();
       return;
     }
 
@@ -190,569 +655,206 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
       return;
     }
 
+    if (reply.action === 'open_calc_modal') {
+      onOpenCalculatorModal(reply.payload);
+      return;
+    }
+
     if (reply.action === 'contact_advisor') {
       window.open(CONTACT_INFO.whatsappUrl, '_blank');
       return;
     }
 
-    // Otherwise treat as a text query
+    // Default: send text
     handleSendMessage(reply.label);
-  };
-
-  // --- STEP-BY-STEP GUIDED WIZARD LOGIC ---
-  const startGuidedWizard = () => {
-    setWizardState({
-      step: 'category',
-      quantity: 1
-    });
-
-    const wizardWelcome: BotMessage = {
-      id: `wizard_init_${Date.now()}`,
-      sender: 'bot',
-      text: `🎯 **Guide de Commande Pas à Pas (Étape 1/5)**\n\nPour commencer, quelle est la catégorie principale de votre besoin ?`,
-      timestamp: new Date(),
-      quickReplies: [
-        { id: 'cat_bureau', label: '📄 Bureautique, CV & Saisie', action: 'wizard_set_cat', payload: 'bureautique', icon: 'FileText' },
-        { id: 'cat_admin', label: '⚖️ Démarches Judiciaires (72h)', action: 'wizard_set_cat', payload: 'administratif', icon: 'Scale' },
-        { id: 'cat_design', label: '🎨 Design, Logo & Affiches', action: 'wizard_set_cat', payload: 'design', icon: 'Sparkles' },
-        { id: 'cat_pdf', label: '🛠️ Solutions PDF & Conversion', action: 'wizard_set_cat', payload: 'pdf', icon: 'FileEdit' },
-        { id: 'cat_web', label: '🌐 Création de Site Web', action: 'wizard_set_cat', payload: 'web', icon: 'Layers' }
-      ]
-    };
-
-    setMessages(prev => [...prev, wizardWelcome]);
-  };
-
-  const handleWizardSelectCategory = (categoryKey: string) => {
-    const filteredServices = SERVICES_DATA.filter(s => s.category === categoryKey);
-    setWizardState(prev => ({
-      ...(prev || { quantity: 1, step: 'service' }),
-      step: 'service',
-      selectedCategory: categoryKey
-    }));
-
-    const categoryNames: Record<string, string> = {
-      bureautique: 'Bureautique & Rédaction',
-      administratif: 'Démarches Judiciaires & Administratives',
-      design: 'Design Graphique & Identité',
-      pdf: 'Solutions PDF & Conversion',
-      web: 'Création Web & Applications'
-    };
-
-    const nextMsg: BotMessage = {
-      id: `wizard_serv_${Date.now()}`,
-      sender: 'bot',
-      text: `📌 **Étape 2/5 : Choisissez votre service dans "${categoryNames[categoryKey] || categoryKey}"**\n\nVoici les prestations disponibles :`,
-      timestamp: new Date(),
-      quickReplies: filteredServices.map(s => ({
-        id: `wiz_s_${s.id}`,
-        label: `${s.name} (${s.priceDisplay})`,
-        action: 'wizard_set_service',
-        payload: s.id
-      }))
-    };
-
-    setMessages(prev => [...prev, nextMsg]);
-  };
-
-  const handleWizardSelectService = (serviceId: string) => {
-    const service = SERVICES_DATA.find(s => s.id === serviceId);
-    if (!service) return;
-
-    const isAdmin = isAdministrativeService(service);
-    const initialQty = service.id === 'saisie-texte' ? 30 : 1;
-    const defaultTurnaround = isAdmin 
-      ? ADMINISTRATIVE_LOCKED_TURNAROUND 
-      : (TURNAROUND_OPTIONS.find(t => t.id === 'express-same-day') || TURNAROUND_OPTIONS[1]);
-
-    setWizardState(prev => ({
-      ...(prev || { step: 'quantity', quantity: initialQty }),
-      step: 'quantity',
-      selectedService: service,
-      quantity: initialQty,
-      selectedTurnaround: defaultTurnaround
-    }));
-
-    const pricing = calculateServicePrice(service, initialQty);
-
-    const nextMsg: BotMessage = {
-      id: `wizard_qty_${Date.now()}`,
-      sender: 'bot',
-      text: `📊 **Étape 3/5 : Définissez la quantité ou le volume pour "${service.name}"**\n\n• Tarif unitaire de base : **${service.priceDisplay}** (${service.unitLabel})\n${service.volumeRulesDescription ? `• *${service.volumeRulesDescription}*` : ''}\n\nChoisissez ou ajustez le volume souhaité :`,
-      timestamp: new Date(),
-      widgetType: 'quick_calculator',
-      widgetData: {
-        service,
-        quantity: initialQty,
-        pricing
-      },
-      quickReplies: [
-        { id: 'qty_1', label: `1 ${service.unitLabel}`, action: 'wizard_set_qty', payload: 1 },
-        { id: 'qty_3', label: `3 ${service.unitLabel}`, action: 'wizard_set_qty', payload: 3 },
-        { id: 'qty_5', label: `5 ${service.unitLabel}`, action: 'wizard_set_qty', payload: 5 },
-        { id: 'qty_10', label: `10 ${service.unitLabel}`, action: 'wizard_set_qty', payload: 10 },
-        { id: 'qty_50', label: `50 ${service.unitLabel}`, action: 'wizard_set_qty', payload: 50 }
-      ]
-    };
-
-    setMessages(prev => [...prev, nextMsg]);
-  };
-
-  const handleWizardSetQuantity = (newQty: number) => {
-    if (!wizardState?.selectedService) return;
-    const service = wizardState.selectedService;
-    const isAdmin = isAdministrativeService(service);
-    const pricing = calculateServicePrice(service, newQty);
-
-    setWizardState(prev => ({
-      ...prev!,
-      step: 'turnaround',
-      quantity: newQty
-    }));
-
-    let turnaroundText = `⏱️ **Étape 4/5 : Délai de réalisation souhaité**\n\n`;
-    let quickReplies: BotQuickReply[] = [];
-
-    if (isAdmin) {
-      turnaroundText += `⚖️ **Délai Réglementaire du Tribunal : 72h (3 jours ouvrés)**\n\nPour les actes de justice et d'État (Nationalité & Casier), le délai est fixé à **72h ouvrées** pour la signature du magistrat au tribunal.\n\n*Paiement requis à l'enregistrement pour les timbres fiscaux • Reçu officiel de demande et transaction immédiat.*`;
-      quickReplies = [
-        { id: 'turn_admin_ok', label: '✅ Valider le délai légal (72h)', action: 'wizard_set_turnaround', payload: 'admin-72h', primary: true }
-      ];
-    } else {
-      turnaroundText += `Montant calculé pour **${newQty} ${service.unitLabel}** : **${formatFCFA(pricing.totalPrice)}**\n\nChoisissez le délai qui vous convient :`;
-      quickReplies = TURNAROUND_OPTIONS.map(opt => ({
-        id: `wiz_t_${opt.id}`,
-        label: `${opt.badge} ${opt.label} (${opt.hoursDetail})`,
-        action: 'wizard_set_turnaround',
-        payload: opt.id
-      }));
-    }
-
-    const nextMsg: BotMessage = {
-      id: `wizard_turn_${Date.now()}`,
-      sender: 'bot',
-      text: turnaroundText,
-      timestamp: new Date(),
-      quickReplies
-    };
-
-    setMessages(prev => [...prev, nextMsg]);
-  };
-
-  const handleWizardSetTurnaround = (turnaroundId: string) => {
-    if (!wizardState?.selectedService) return;
-    const service = wizardState.selectedService;
-    const isAdmin = isAdministrativeService(service);
-
-    const turnaround = isAdmin 
-      ? ADMINISTRATIVE_LOCKED_TURNAROUND 
-      : (TURNAROUND_OPTIONS.find(t => t.id === turnaroundId) || TURNAROUND_OPTIONS[1]);
-
-    setWizardState(prev => ({
-      ...prev!,
-      step: 'details',
-      selectedTurnaround: turnaround
-    }));
-
-    const nextMsg: BotMessage = {
-      id: `wizard_det_${Date.now()}`,
-      sender: 'bot',
-      text: `📝 **Étape 5/5 : Coordonnées & Finalisation**\n\nVeuillez indiquer votre **Nom complet** et vos consignes éventuelles (ou cliquez ci-dessous pour finaliser directement) :`,
-      timestamp: new Date(),
-      quickReplies: [
-        { id: 'finish_direct', label: '🚀 Finaliser mon récapitulatif maintenant', action: 'wizard_finish_order', primary: true }
-      ]
-    };
-
-    setMessages(prev => [...prev, nextMsg]);
-  };
-
-  const handleWizardFinish = (customName?: string, customNotes?: string) => {
-    if (!wizardState?.selectedService) return;
-    const service = wizardState.selectedService;
-    const qty = wizardState.quantity || 1;
-    const turnaround = wizardState.selectedTurnaround || ADMINISTRATIVE_LOCKED_TURNAROUND;
-    const name = customName || wizardState.customerName || 'Client';
-    const notes = customNotes || wizardState.customerNotes || '';
-    const isAdmin = isAdministrativeService(service);
-
-    const pricing = calculateServicePrice(service, qty);
-
-    const whatsappUrl = generateQuickServiceWhatsAppLink(
-      service,
-      qty,
-      name,
-      notes,
-      turnaround
-    );
-
-    try {
-      confetti({
-        particleCount: 40,
-        spread: 60,
-        origin: { y: 0.85 }
-      });
-    } catch {
-      // ignore
-    }
-
-    const summaryMsg: BotMessage = {
-      id: `wizard_sum_${Date.now()}`,
-      sender: 'bot',
-      text: `🎉 **Votre Commande est Prête ! (Récapitulatif Officiel)**\n\n📌 **Service :** ${service.name}\n📊 **Quantité :** ${qty} ${service.unitLabel}\n👤 **Nom :** ${name}\n⏱️ **Délai :** ${turnaround.label} (${turnaround.hoursDetail})\n💰 **Montant Total :** **${formatFCFA(pricing.totalPrice)}**\n\n${isAdmin ? '⚖️ *Paiement de la demande requis • Reçu officiel immédiat dès paiement • Retrait au tribunal sous 72h.*' : '🛡️ *Paiement à la livraison après validation de l\'aperçu via lien Wave sécurisé.*'}\n\nVous pouvez valider directement sur WhatsApp ou l\'ajouter à votre panier sur le site :`,
-      timestamp: new Date(),
-      widgetType: 'order_summary',
-      widgetData: {
-        service,
-        quantity: qty,
-        pricing,
-        turnaround,
-        customerName: name,
-        customerNotes: notes,
-        whatsappUrl,
-        isAdmin
-      },
-      quickReplies: [
-        { id: 'w_act_open_modal', label: '📋 Ouvrir la fiche détaillée', action: 'open_service_detail', payload: service.id },
-        { id: 'w_act_restart', label: '🔄 Configurer une autre commande', action: 'start_wizard' },
-        { id: 'w_act_catalog', label: '👀 Voir tout le catalogue', action: 'scroll_catalog' }
-      ]
-    };
-
-    setMessages(prev => [...prev, summaryMsg]);
-    setWizardState(null);
-  };
-
-  // Intercept wizard actions from quick reply clicks
-  const handleInterceptAction = (reply: BotQuickReply) => {
-    if (reply.action === 'wizard_set_cat') {
-      handleWizardSelectCategory(reply.payload);
-      return;
-    }
-    if (reply.action === 'wizard_set_service') {
-      handleWizardSelectService(reply.payload);
-      return;
-    }
-    if (reply.action === 'wizard_set_qty') {
-      handleWizardSetQuantity(reply.payload);
-      return;
-    }
-    if (reply.action === 'wizard_set_turnaround') {
-      handleWizardSetTurnaround(reply.payload);
-      return;
-    }
-    if (reply.action === 'wizard_finish_order') {
-      handleWizardFinish();
-      return;
-    }
-
-    handleQuickAction(reply);
   };
 
   if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end sm:p-6 bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
-      onClick={onClose}
+      id="smart-guide-bot-modal" 
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bot-header-title"
     >
       <div 
-        id="smart-guide-bot-window"
-        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 w-full ${
-          isMaximized 
-            ? 'sm:w-[700px] h-[92vh] sm:h-[88vh] rounded-t-3xl sm:rounded-3xl' 
-            : 'sm:w-[460px] h-[88vh] sm:h-[680px] rounded-t-3xl sm:rounded-2xl'
-        }`}
-        onClick={(e) => e.stopPropagation()}
+        className={`bg-white dark:bg-[#0F172A] w-full ${isMaximized ? 'max-w-4xl h-[94vh]' : 'max-w-xl h-[88vh] max-h-[720px]'} rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 transition-all duration-300`}
       >
-        {/* --- HEADER --- */}
-        <div className="bg-gradient-to-r from-[#0F52BA] via-slate-900 to-slate-950 text-white p-4 sm:p-5 flex items-center justify-between flex-shrink-0 relative border-b border-blue-900/50">
-          
+        {/* Top App Header */}
+        <div className="px-4 sm:px-6 py-3.5 bg-gradient-to-r from-[#0A2540] via-[#0F52BA] to-[#0A2540] text-white flex items-center justify-between shadow-sm">
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF5E14] to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-950/30">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
                 <Bot className="w-6 h-6" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-950"></span>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-blue-900 rounded-full" />
             </div>
-
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-extrabold text-sm sm:text-base font-['Outfit'] tracking-wide">
-                  DEMS • Conseiller Virtuel
+                <h3 id="bot-header-title" className="font-bold text-base sm:text-lg tracking-tight text-white flex items-center gap-1.5">
+                  DEMS
+                  <span className="text-[10px] px-1.5 py-0.5 bg-white/20 rounded-full font-medium uppercase tracking-wider text-amber-300">
+                    Assistant Virtuel
+                  </span>
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold">
-                  En ligne
-                </span>
               </div>
-              <p className="text-[11px] text-slate-300 flex items-center space-x-1">
-                <span>OKBW Bureautique & Design • Devis & Commande 24/7</span>
+              <p className="text-[11px] sm:text-xs text-blue-100/90 flex items-center gap-1">
+                <span>Guide de Commande Direct WhatsApp</span>
+                <span className="inline-block w-1 h-1 rounded-full bg-blue-300" />
+                <span className="text-amber-300 font-medium">OKBW Bureautique & Design</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-1">
-            {/* Reset Chat */}
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <button
+              id="btn-bot-reset"
               onClick={handleResetChat}
-              className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-              title="Réinitialiser la conversation"
+              title="Recommencer la discussion"
+              className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
 
-            {/* Maximize / Minimize toggle (Desktop) */}
             <button
+              id="btn-bot-maximize"
               onClick={() => setIsMaximized(!isMaximized)}
-              className="hidden sm:inline-flex p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-              title={isMaximized ? "Réduire la fenêtre" : "Agrandir la fenêtre"}
+              title={isMaximized ? "Réduire" : "Agrandir"}
+              className="hidden sm:inline-flex p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
               {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
 
-            {/* Close */}
             <button
-              id="close-guide-bot-btn"
+              id="btn-bot-close"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-              title="Fermer le guide"
+              title="Fermer le Bot"
+              className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* --- NOTICE BAR: NO API REQUIRED & REAL TIME --- */}
-        <div className="bg-blue-50 dark:bg-blue-950/60 border-b border-blue-100 dark:border-blue-900/40 px-4 py-1.5 flex items-center justify-between text-[11px] text-blue-900 dark:text-blue-200">
-          <span className="flex items-center space-x-1 font-medium">
-            <Zap className="w-3.5 h-3.5 text-[#FF5E14]" />
-            <span>Moteur autonome instantané • Aucune clé API requise</span>
-          </span>
-          <span className="font-bold text-[#0F52BA] dark:text-blue-300">
-            Contacts : 01 41 75 24 03
-          </span>
-        </div>
+        {/* State Machine Progress Bar */}
+        {treeState && treeState.step !== 'ORDER_SUMMARY' && (
+          <div className="bg-blue-50 dark:bg-blue-950/40 px-4 py-2 border-b border-blue-100 dark:border-blue-900/30 flex items-center justify-between text-xs text-blue-900 dark:text-blue-200">
+            <div className="flex items-center space-x-2">
+              <span className="font-semibold px-2 py-0.5 bg-blue-600 text-white rounded-md text-[10px]">
+                {treeState.step === 'SERVICE_SELECT' && 'Étape 2/3 : Choix du Service'}
+                {treeState.step === 'QUANTITY_SELECT' && 'Étape 2/3 : Volume / Pages'}
+                {treeState.step === 'SPECIAL_PROMPT' && 'Étape 2/3 : Consignes & Détails'}
+                {treeState.step === 'CUSTOMER_NAME' && 'Étape 3/3 : Nom & Coordonnées'}
+              </span>
+              {treeState.service && (
+                <span className="truncate max-w-[200px] font-medium text-slate-700 dark:text-slate-300">
+                  {treeState.service.name}
+                </span>
+              )}
+            </div>
+            {treeState.totalPrice && treeState.totalPrice > 0 && (
+              <span className="font-bold text-orange-600 dark:text-orange-400">
+                {formatFCFA(treeState.totalPrice)}
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* --- CHAT MESSAGES AREA --- */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/50 dark:bg-slate-950/50">
+        {/* Chat Messages Container */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/50 dark:bg-[#0B1320]/50">
           {messages.map((msg) => (
             <div 
               key={msg.id}
-              className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'} space-y-2`}
             >
-              {/* Message Bubble */}
               <div 
-                className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed shadow-xs ${
-                  msg.sender === 'user'
-                    ? 'bg-[#0F52BA] text-white rounded-br-xs font-medium'
-                    : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-xs'
+                className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3.5 sm:p-4 text-sm leading-relaxed shadow-sm ${
+                  msg.sender === 'user' 
+                    ? 'bg-blue-600 text-white rounded-br-none shadow-blue-500/10' 
+                    : 'bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800 rounded-bl-none shadow-slate-200/50 dark:shadow-none'
                 }`}
               >
-                <div className="whitespace-pre-line">
+                <div className="whitespace-pre-line break-words">
                   {msg.text}
                 </div>
 
-                {/* --- EMBEDDED WIDGETS --- */}
-
-                {/* 1. Service Card Widget */}
-                {msg.widgetType === 'service_card' && msg.widgetData && (
-                  <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        {msg.widgetData.service.name}
-                      </span>
-                      <span className="text-xs font-black text-[#0F52BA] dark:text-blue-400">
-                        {formatFCFA(msg.widgetData.pricing.totalPrice)}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => onOpenServiceModal(msg.widgetData.service)}
-                        className="px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-[#0F52BA] dark:text-blue-300 font-bold text-xs flex items-center justify-center space-x-1 transition-colors"
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Fiche détaillée</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          onAddToCart(msg.widgetData.service, msg.widgetData.quantity);
-                          handleSendMessage(`J'ai ajouté "${msg.widgetData.service.name}" à mon panier !`);
-                        }}
-                        className="px-3 py-2 rounded-lg bg-[#FF5E14] hover:brightness-110 text-white font-bold text-xs flex items-center justify-center space-x-1 transition-all"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" />
-                        <span>Ajouter au panier</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. Administrative Procedure Timeline Widget */}
-                {msg.widgetType === 'admin_procedure' && (
-                  <div className="mt-3 p-3 rounded-xl bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-900/60 space-y-2 text-xs">
-                    <div className="flex items-center space-x-1.5 font-bold text-[#FF5E14] dark:text-orange-300">
-                      <Scale className="w-4 h-4" />
-                      <span>Rappel du Protocole des Greffes</span>
-                    </div>
-                    <div className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300">
-                      <div className="flex items-start space-x-2">
-                        <span className="w-4 h-4 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">1</span>
-                        <span><strong>Paiement obligatoire :</strong> Règlement des timbres fiscaux d'État à l'enregistrement.</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">2</span>
-                        <span><strong>Reçu officiel IMMÉDIAT :</strong> Transmis dès confirmation du règlement.</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <span className="w-4 h-4 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">3</span>
-                        <span><strong>Retrait Document :</strong> Disponible au tribunal sous <strong>72h (3 jours)</strong>.</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Quick Calculator Widget */}
-                {msg.widgetType === 'quick_calculator' && msg.widgetData && (
-                  <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-slate-600 dark:text-slate-400">Volume sélectionné :</span>
-                      <span className="font-extrabold text-slate-900 dark:text-white">
-                        {msg.widgetData.quantity} {msg.widgetData.service.unitLabel}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200 dark:border-slate-800">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">Total estimé :</span>
-                      <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
-                        {formatFCFA(msg.widgetData.pricing.totalPrice)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Scenario Guide Widget */}
-                {msg.widgetType === 'scenario_guide' && (
-                  <div className="mt-3 space-y-2">
-                    {CLIENT_SCENARIOS.map((sc) => (
-                      <div 
-                        key={sc.id}
-                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#0F52BA] transition-all space-y-1.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-xs text-[#0F52BA] dark:text-blue-400">
-                            {sc.title}
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                            {sc.delay}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                          {sc.desc}
-                        </p>
-                        <div className="pt-1 flex items-center justify-between">
-                          <span className="text-[10px] font-semibold text-[#FF5E14]">
-                            {sc.recommendation}
-                          </span>
-                          <button
-                            onClick={() => {
-                              const s = SERVICES_DATA.find(srv => srv.id === sc.serviceIds[0]);
-                              if (s) onOpenServiceModal(s);
-                            }}
-                            className="text-[11px] font-bold text-[#0F52BA] dark:text-blue-400 hover:underline flex items-center space-x-1"
-                          >
-                            <span>Détails</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* 5. Document Checklist Widget */}
-                {msg.widgetType === 'docs_checklist' && (
-                  <div className="mt-3 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 space-y-2 text-xs">
-                    <div className="flex items-center space-x-2 font-extrabold text-[#0F52BA] dark:text-blue-300">
-                      <FileCheck2 className="w-4 h-4 text-[#FF5E14]" />
-                      <span>Checklist de vos documents à transmettre</span>
-                    </div>
-                    <div className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300">
-                      <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <span>Extrait de naissance original / copie lisible</span>
-                        <span className="text-[10px] font-bold text-emerald-600">Photo / Scan</span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <span>CNI ou Passeport valide du demandeur</span>
-                        <span className="text-[10px] font-bold text-emerald-600">Photo / Scan</span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <span>Lieu de naissance pour attribution du greffe</span>
-                        <span className="text-[10px] font-bold text-blue-600">Texte WhatsApp</span>
-                      </div>
-                    </div>
-                    <div className="pt-1 text-[10px] text-slate-500 dark:text-slate-400 italic">
-                      *Envoyez simplement ces éléments par photo nette sur WhatsApp après avoir cliqué sur le bouton de commande.*
-                    </div>
-                  </div>
-                )}
-
-                {/* 6. Order Summary Widget */}
+                {/* Special Summary Card Widget */}
                 {msg.widgetType === 'order_summary' && msg.widgetData && (
-                  <div className="mt-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/80 space-y-3">
-                    <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Message prêt à transmettre</span>
+                  <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-orange-50/50 dark:from-slate-800 dark:to-slate-800/80 border border-blue-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-2 mb-3">
+                      <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wide">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <span>Ticket de Commande</span>
+                      </div>
+                      <span className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded-full font-bold">
+                        Prêt à envoyer
+                      </span>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 dark:text-slate-400">Prestation :</span>
+                        <span className="font-semibold text-right">{msg.widgetData.service?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 dark:text-slate-400">Quantité :</span>
+                        <span className="font-semibold">{msg.widgetData.quantity} {msg.widgetData.service?.unitLabel}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 dark:text-slate-400">Client :</span>
+                        <span className="font-semibold">{msg.widgetData.customerName}</span>
+                      </div>
+                      {msg.widgetData.instructions && (
+                        <div className="flex justify-between gap-2">
+                          <span className="text-slate-500 dark:text-slate-400 shrink-0">Consignes :</span>
+                          <span className="font-medium text-right text-slate-600 dark:text-slate-300">{msg.widgetData.instructions}</span>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center text-sm font-bold text-blue-950 dark:text-white">
+                        <span>Total estimé :</span>
+                        <span className="text-base text-orange-600 dark:text-orange-400">{formatFCFA(msg.widgetData.totalPrice)}</span>
+                      </div>
+                    </div>
+
+                    {/* Direct WhatsApp CTA Button */}
+                    <div className="mt-4 pt-2">
                       <a
+                        id="btn-whatsapp-order-confirm"
                         href={msg.widgetData.whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-md shadow-emerald-950/20 transition-all text-center"
+                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5"
                       >
-                        <MessageSquare className="w-4 h-4" />
+                        <MessageSquare className="w-5 h-5 fill-white/20" />
                         <span>Valider et envoyer sur WhatsApp</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
                       </a>
 
-                      <button
-                        onClick={() => {
-                          onAddToCart(
-                            msg.widgetData.service, 
-                            msg.widgetData.quantity, 
-                            msg.widgetData.customerNotes
-                          );
-                          handleSendMessage(`J'ai ajouté cette commande à mon panier.`);
-                        }}
-                        className="px-4 py-2.5 rounded-xl bg-[#0F52BA] hover:bg-blue-600 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors"
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        <span>Mettre au panier</span>
-                      </button>
+                      <p className="mt-2 text-center text-[11px] text-slate-500 dark:text-slate-400">
+                        📱 Ouvre votre discussion WhatsApp avec le message structuré pré-rempli.
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Timestamp */}
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 px-1">
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-
-              {/* Quick Action Chips attached to this bot message */}
-              {msg.sender === 'bot' && msg.quickReplies && msg.quickReplies.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2 max-w-[95%]">
+              {/* Quick Reply Action Buttons */}
+              {msg.quickReplies && msg.quickReplies.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1 max-w-[95%]">
                   {msg.quickReplies.map((reply) => (
                     <button
                       key={reply.id}
-                      onClick={() => handleInterceptAction(reply)}
-                      className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center space-x-1.5 transition-all text-left ${
+                      id={`btn-reply-${reply.id}`}
+                      onClick={() => handleQuickAction(reply)}
+                      className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-150 flex items-center space-x-1.5 shadow-sm text-left ${
                         reply.primary
-                          ? 'bg-[#FF5E14] hover:brightness-110 text-white shadow-sm shadow-orange-500/20'
-                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-[#0F52BA] dark:hover:border-blue-400 hover:text-[#0F52BA] dark:hover:text-blue-300'
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 border border-orange-400/30'
+                          : 'bg-white dark:bg-[#1E293B] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30'
                       }`}
                     >
+                      {reply.action === 'select_pole' && <ChevronRight className="w-3.5 h-3.5 text-orange-500" />}
                       <span>{reply.label}</span>
                     </button>
                   ))}
@@ -761,59 +863,21 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
             </div>
           ))}
 
-          {/* Typing Indicator */}
           {isTyping && (
-            <div className="flex items-center space-x-2 text-slate-400 text-xs py-1">
-              <div className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-blue-600 animate-pulse" />
+            <div className="flex items-center space-x-2 text-slate-400 dark:text-slate-500 text-xs p-2">
+              <div className="w-7 h-7 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <Bot className="w-4 h-4 animate-bounce" />
               </div>
-              <div className="flex space-x-1">
-                <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"></span>
-                <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]"></span>
-                <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]"></span>
-              </div>
+              <span>DEMS prépare votre réponse...</span>
             </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* --- FOOTER INPUT BAR --- */}
-        <div className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col space-y-2 flex-shrink-0">
-          
-          {/* Quick suggestions pills */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar text-[11px]">
-            <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase whitespace-nowrap pl-1">
-              Suggestions :
-            </span>
-            <button
-              onClick={() => handleSendMessage("Combien coûte la saisie de 60 pages ?")}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 whitespace-nowrap text-[11px]"
-            >
-              📊 Devis Saisie 60p
-            </button>
-            <button
-              onClick={() => handleSendMessage("Quelles sont les pièces pour le casier judiciaire ?")}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 whitespace-nowrap text-[11px]"
-            >
-              ⚖️ Papiers Casier
-            </button>
-            <button
-              onClick={() => handleSendMessage("Je veux créer un CV avec costume")}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 whitespace-nowrap text-[11px]"
-            >
-              👔 CV Pro Costume
-            </button>
-            <button
-              onClick={() => handleSendMessage("Comment payer par Wave ?")}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 whitespace-nowrap text-[11px]"
-            >
-              💳 Paiement Wave
-            </button>
-          </div>
-
-          {/* Text Input */}
-          <form 
+        {/* Input Bar */}
+        <div className="p-3 sm:p-4 bg-white dark:bg-[#0F172A] border-t border-slate-200 dark:border-slate-800">
+          <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
@@ -822,25 +886,38 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
           >
             <input
               ref={inputRef}
+              id="bot-user-input"
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Posez votre question ou demandez un devis..."
-              className="flex-1 p-3 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F52BA] transition-colors"
+              placeholder={
+                treeState?.step === 'CUSTOMER_NAME'
+                  ? 'Tapez votre Nom & Prénom ici...'
+                  : treeState?.step === 'SPECIAL_PROMPT'
+                  ? 'Décrivez votre besoin ou précisions...'
+                  : treeState?.step === 'QUANTITY_SELECT'
+                  ? 'Indiquez le nombre de pages ou unités...'
+                  : 'Posez une question ou décrivez votre projet...'
+              }
+              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
-            
             <button
+              id="btn-bot-send"
               type="submit"
               disabled={!inputText.trim()}
-              className="p-3 rounded-xl bg-[#0F52BA] hover:bg-blue-600 disabled:opacity-40 text-white font-bold transition-all flex-shrink-0"
-              aria-label="Envoyer le message"
+              className="p-2.5 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:hover:bg-blue-600 text-white text-xs sm:text-sm font-semibold transition-colors flex items-center space-x-1.5 shadow-md shadow-blue-600/20"
             >
               <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">Envoyer</span>
             </button>
           </form>
 
+          {/* Quick Helper Subtext */}
+          <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1">
+            <span>Direct WhatsApp : <strong>{CONTACT_INFO.whatsappNumber}</strong></span>
+            <span>Règlement sécurisé Wave & Mobile Money</span>
+          </div>
         </div>
-
       </div>
     </div>
   );

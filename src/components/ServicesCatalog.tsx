@@ -49,6 +49,12 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
       icon: <ShieldCheck className="w-4 h-4 text-[#FF5E14]" /> 
     },
     { 
+      id: 'scolaire', 
+      label: '🎓 Inscription en Ligne & Scolaire', 
+      count: SERVICES_DATA.filter(s => s.category === 'scolaire').length,
+      icon: <FileCheck className="w-4 h-4 text-blue-500" /> 
+    },
+    { 
       id: 'bureautique', 
       label: 'Bureautique & Documents', 
       count: SERVICES_DATA.filter(s => s.category === 'bureautique').length,

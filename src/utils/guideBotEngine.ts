@@ -1,6 +1,15 @@
 import { ServiceItem, TurnaroundOption } from '../types';
 import { SERVICES_DATA, CONTACT_INFO } from '../data/servicesData';
-import { calculateServicePrice, formatFCFA, TURNAROUND_OPTIONS, ADMINISTRATIVE_LOCKED_TURNAROUND, isAdministrativeService } from './pricing';
+import { 
+  calculateServicePrice, 
+  formatFCFA, 
+  TURNAROUND_OPTIONS, 
+  ADMINISTRATIVE_LOCKED_TURNAROUND, 
+  isAdministrativeService,
+  buildWhatsAppFormattedMessage,
+  PRIMARY_WHATSAPP_NUMBER,
+  DISPLAY_CONTACTS
+} from './pricing';
 
 export interface BotQuickReply {
   id: string;
@@ -21,6 +30,25 @@ export interface BotMessage {
   widgetData?: any;
 }
 
+export type DecisionTreeStep = 
+  | 'POLE_SELECT'
+  | 'SERVICE_SELECT'
+  | 'QUANTITY_SELECT'
+  | 'SPECIAL_PROMPT'
+  | 'CUSTOMER_NAME'
+  | 'ORDER_SUMMARY';
+
+export interface DecisionTreeState {
+  step: DecisionTreeStep;
+  poleId?: string;
+  service?: ServiceItem;
+  quantity: number;
+  specialDetail?: string;
+  customerName?: string;
+  turnaround?: TurnaroundOption;
+  totalPrice?: number;
+}
+
 export interface StepWizardState {
   step: 'category' | 'service' | 'quantity' | 'turnaround' | 'details' | 'summary';
   selectedCategory?: string;
@@ -30,6 +58,51 @@ export interface StepWizardState {
   customerName?: string;
   customerNotes?: string;
 }
+
+export const POLES_CONFIG = [
+  {
+    id: 'pole_bureau',
+    label: '📄 Bureautique & Documents',
+    description: 'CV Pros, Saisie de mémoires, Lettres & PowerPoints',
+    icon: 'FileText',
+    services: ['cv-premium', 'cv-standard', 'saisie-texte', 'lettre-motivation', 'presentation-powerpoint']
+  },
+  {
+    id: 'pole_pdf',
+    label: '📝 Solutions PDF & Conversion',
+    description: 'Modifications sans trace, conversions Word/Excel & corrections',
+    icon: 'FileEdit',
+    services: ['modification-pdf', 'conversion-simple', 'conversion-correction']
+  },
+  {
+    id: 'pole_design',
+    label: '🎨 Design & Image',
+    description: 'Logos sur-mesure, Affiches pub, Retouches photo & Cartes de visite',
+    icon: 'Palette',
+    services: ['retouche-photo', 'creation-affiche', 'creation-logo', 'carte-de-visite']
+  },
+  {
+    id: 'pole_web',
+    label: '💻 Développement Web & Apps',
+    description: 'Sites vitrines, E-commerce, Applications mobiles & sur-mesure',
+    icon: 'Globe',
+    services: ['web-vitrine', 'web-multipage', 'app-pwa', 'app-sur-mesure']
+  },
+  {
+    id: 'pole_scolaire',
+    label: '🎓 Inscription en Ligne (6ème à Tle)',
+    description: 'Inscriptions en ligne secondaire : privé (3 500 F), public MENA (6 500 F)',
+    icon: 'GraduationCap',
+    services: ['inscription-privee', 'inscription-publique']
+  },
+  {
+    id: 'pole_admin',
+    label: '⚖️ Actes Judiciaires (72h)',
+    description: 'Casier Judiciaire & Certificat de Nationalité officiel au tribunal',
+    icon: 'Scale',
+    services: ['certificat-nationalite', 'casier-judiciaire', 'pack-nationalite-casier']
+  }
+];
 
 export const IVORIAN_TRIBUNALS = [
   { name: 'Tribunal de Première Instance d\'Abidjan - Plateau', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
@@ -67,6 +140,14 @@ export const CLIENT_SCENARIOS = [
     delay: '24h à 48h'
   },
   {
+    id: 'sc_school',
+    title: '🏫 Inscription Scolaire (6ème à Tle)',
+    desc: 'Inscription en ligne tout niveau secondaire : privé/semi-privé (3 500 F) ou public MENA (6 500 F).',
+    recommendation: 'Inscription en Ligne Secondaire (6ème à Terminale)',
+    serviceIds: ['inscription-privee', 'inscription-publique'],
+    delay: '2h à 24h'
+  },
+  {
     id: 'sc_biz',
     title: '🚀 Entreprise & Commerce',
     desc: 'Logo vectoriel HD + Carte de visite + Affiche pub + Site vitrine.',
@@ -76,25 +157,26 @@ export const CLIENT_SCENARIOS = [
   }
 ];
 
-export const INITIAL_QUICK_REPLIES: BotQuickReply[] = [
-  { id: 'start_guided_order', label: '🚀 Guide de commande pas à pas', action: 'start_wizard', icon: 'Sparkles', primary: true },
-  { id: 'admin_services', label: '⚖️ Casier & Nationalité (72h)', action: 'category_admin', icon: 'Scale' },
-  { id: 'scenario_help', label: '🎯 Guide selon votre profil (CV, Mémoire, Concours)', action: 'show_scenarios', icon: 'User' },
-  { id: 'simulate_price', label: '🧮 Calculer un devis instantané', action: 'open_calc_modal', icon: 'Calculator' },
-  { id: 'cv_services', label: '📄 CV Pro & Costume virtuel (1 000 F)', action: 'show_cv', icon: 'FileUser' },
-  { id: 'pdf_services', label: '🛠️ Modifier un PDF sans trace', action: 'show_pdf', icon: 'FileEdit' },
-  { id: 'payment_faq', label: '💳 Sécurité & Paiement Wave', action: 'faq_payment', icon: 'ShieldCheck' }
+export const INITIAL_POLE_REPLIES: BotQuickReply[] = [
+  { id: 'pole_bureau_btn', label: '📄 Bureautique & Documents', action: 'select_pole', payload: 'pole_bureau', icon: 'FileText', primary: true },
+  { id: 'pole_pdf_btn', label: '📝 Solutions PDF & Conversion', action: 'select_pole', payload: 'pole_pdf', icon: 'FileEdit' },
+  { id: 'pole_design_btn', label: '🎨 Design & Image', action: 'select_pole', payload: 'pole_design', icon: 'Palette' },
+  { id: 'pole_web_btn', label: '💻 Développement Web & Apps', action: 'select_pole', payload: 'pole_web', icon: 'Globe' },
+  { id: 'pole_scolaire_btn', label: '🎓 Inscription en Ligne & Scolaire', action: 'select_pole', payload: 'pole_scolaire', icon: 'GraduationCap' },
+  { id: 'pole_admin_btn', label: '⚖️ Actes Judiciaires (72h)', action: 'select_pole', payload: 'pole_admin', icon: 'Scale' }
 ];
+
+export const INITIAL_QUICK_REPLIES: BotQuickReply[] = INITIAL_POLE_REPLIES;
 
 export const GREETING_MESSAGE: BotMessage = {
   id: 'msg_welcome',
   sender: 'bot',
-  text: `👋 Bonjour et bienvenue chez OKBW Bureautique & Design !\n\nJe suis DEMS, votre conseiller interactif et orchestrateur de commande en ligne.\n\nJe suis là pour vous orienter en direct :\n✨ Trouver le service idéal selon vos besoins (Bureautique, CV Pro, Design, Solutions PDF, Actes de justice 72h)\n🧮 Calculer automatiquement vos tarifs dégressifs en FCFA\n🚀 Enregistrer et transmettre votre commande pré-remplie directement sur WhatsApp en 1 clic.\n\nQue souhaitez-vous réaliser aujourd'hui ?`,
+  text: `Bonjour et bienvenue chez OKBW Bureautique & Design !\n\nJe suis DEMS, votre assistant virtuel et conseiller dédié. Je vous accompagne pas à pas pour :\n✨ Trouver la formule idéale adaptée à votre situation\n🧮 Calculer vos tarifs dégressifs en direct (FCFA)\n⚖️ Vous guider pour vos documents, démarches et créations\n🚀 Préparer et transmettre votre commande en 1 clic sur WhatsApp.\n\nQuel type de projet souhaitez-vous réaliser aujourd'hui ?`,
   timestamp: new Date(),
-  quickReplies: INITIAL_QUICK_REPLIES
+  quickReplies: INITIAL_POLE_REPLIES
 };
 
-// Normalize text for intelligent matching
+// Normalize text for intelligent keyword matching
 export function normalizeQuery(query: string): string {
   return query
     .toLowerCase()
@@ -115,6 +197,12 @@ export function findServiceByKeyword(query: string): ServiceItem | undefined {
   }
   if (norm.includes('pack duo') || norm.includes('duo') || (norm.includes('casier') && norm.includes('nationalite'))) {
     return SERVICES_DATA.find(s => s.id === 'pack-nationalite-casier');
+  }
+  if (norm.includes('inscription publique') || norm.includes('ecole publique') || norm.includes('mena') || norm.includes('mesrs')) {
+    return SERVICES_DATA.find(s => s.id === 'inscription-publique');
+  }
+  if (norm.includes('inscription') || norm.includes('scolaire') || norm.includes('eleve') || norm.includes('rentree') || norm.includes('etablissement')) {
+    return SERVICES_DATA.find(s => s.id === 'inscription-privee');
   }
   if (norm.includes('costume') || norm.includes('cv pro') || norm.includes('cv canadien') || norm.includes('cv premium')) {
     return SERVICES_DATA.find(s => s.id === 'cv-premium');
@@ -181,6 +269,29 @@ export function extractQuantityFromQuery(query: string): number | null {
   return null;
 }
 
+// Build WhatsApp Direct URL for State Machine Order
+export function buildStateOrderWhatsAppUrl(params: {
+  service: ServiceItem;
+  quantity: number;
+  customerName?: string;
+  instructions?: string;
+  totalPrice: number;
+}): string {
+  const isAdm = isAdministrativeService(params.service);
+  const qtyLabel = `${params.quantity} (${params.service.unitLabel})`;
+
+  const message = buildWhatsAppFormattedMessage({
+    serviceName: params.service.name,
+    quantityText: qtyLabel,
+    customerName: params.customerName || 'Client',
+    instructions: params.instructions || 'Prestation standard',
+    totalAmount: params.totalPrice,
+    isAdministrative: isAdm
+  });
+
+  return `https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 // Generate intelligent bot response for freeform or action-based input
 export function processUserQuery(query: string, currentWizardState?: StepWizardState): BotMessage {
   const norm = normalizeQuery(query);
@@ -191,9 +302,9 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `👋 Bonjour ! Comment puis-je vous orienter aujourd'hui ? Choisissez une option rapide ci-dessous ou posez-moi directement votre question :`,
+      text: `Bonjour ! Bienvenue chez OKBW Bureautique & Design. Je suis DEMS, votre assistant virtuel.\n\nQuel type de projet souhaitez-vous réaliser aujourd'hui ? Choisissez un pôle ci-dessous :`,
       timestamp: now,
-      quickReplies: INITIAL_QUICK_REPLIES
+      quickReplies: INITIAL_POLE_REPLIES
     };
   }
 
@@ -202,15 +313,15 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `🎯 **Guide Personnalisé selon votre Situation :**\n\nChoisissez votre objectif pour voir immédiatement le pack recommandé, les délais et les pièces nécessaires :`,
+      text: `🎯 Guide Personnalisé selon votre Situation :\n\nChoisissez votre profil pour découvrir la formule adaptée et lancer la commande :`,
       timestamp: now,
       widgetType: 'scenario_guide',
       widgetData: CLIENT_SCENARIOS,
       quickReplies: [
-        { id: 'sc_job_btn', label: '💼 Emploi & Recrutement (CV Pro)', action: 'show_cv', primary: true },
-        { id: 'sc_court_btn', label: '⚖️ Concours & Actes (Casier/Nat)', action: 'category_admin' },
-        { id: 'sc_student_btn', label: '🎓 Étudiant (Mémoire/Soutenance)', action: 'show_student_pack' },
-        { id: 'sc_biz_btn', label: '🚀 Entreprise (Logo & Web)', action: 'show_business_pack' }
+        { id: 'sc_job_btn', label: '💼 Emploi & Recrutement (CV Pro)', action: 'select_service_direct', payload: 'cv-premium', primary: true },
+        { id: 'sc_court_btn', label: '⚖️ Concours (Pack Duo 6 500 F)', action: 'select_service_direct', payload: 'pack-nationalite-casier' },
+        { id: 'sc_school_btn', label: '🏫 Inscription Scolaire (3 500 F / 6 500 F)', action: 'select_pole', payload: 'pole_scolaire' },
+        { id: 'sc_student_btn', label: '🎓 Étudiant (Mémoire / Diaporama)', action: 'select_pole', payload: 'pole_bureau' }
       ]
     };
   }
@@ -234,82 +345,49 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `🏛️ **Procédure Réglementaire des Actes Judiciaires & Administratifs**\n\nVoici les règles strictes en vigueur pour l'obtention de vos actes officiels en Côte d'Ivoire :\n\n1️⃣ **Paiement de la demande (Obligatoire)** : Requis à l'enregistrement pour le règlement effectif des timbres fiscaux d'État et droits de greffe.\n2️⃣ **Reçu officiel IMMÉDIAT** : Dès confirmation de votre règlement, vous recevez votre **reçu officiel de demande & de transaction**.\n3️⃣ **Retrait du Document sous 72h (3 jours ouvrés)** : Le document original légalisé est retiré au tribunal après signature du magistrat.\n\n📄 **Tarifs officiels :**\n• Certificat de Nationalité : **3 500 FCFA**\n• Casier Judiciaire (Bulletin N°3) : **3 500 FCFA**\n• Pack Duo (Nationalité + Casier) : **6 500 FCFA** *(Économie de 500 F)*`,
+      text: `🏛️ Procédure Réglementaire des Actes Judiciaires & Administratifs\n\nVoici les règles officielles en vigueur en Côte d'Ivoire :\n\n1️⃣ Règlement de la demande : Nécessaire à l'enregistrement pour le paiement effectif des timbres fiscaux d'État et droits de greffe.\n2️⃣ Reçu officiel IMMÉDIAT : Dès confirmation de votre règlement, vous recevez votre reçu officiel de demande et transaction.\n3️⃣ Retrait sous 72h (3 jours ouvrés) : Le document authentifié est retiré au tribunal après signature du magistrat.\n\n📄 Tarifs officiels :\n• Certificat de Nationalité : 3 500 FCFA\n• Casier Judiciaire (Bulletin N°3) : 3 500 FCFA\n• Pack Duo (Nationalité + Casier) : 6 500 FCFA (Économie de 500 F)`,
       timestamp: now,
       widgetType: 'admin_procedure',
       widgetData: targetService || SERVICES_DATA.find(s => s.id === 'certificat-nationalite'),
       quickReplies: [
-        { id: 'order_admin_nat', label: '⚖️ Demander Certificat Nationalité (3 500 F)', action: 'open_service_detail', payload: 'certificat-nationalite', primary: true },
-        { id: 'order_admin_casier', label: '⚖️ Demander Casier Judiciaire (3 500 F)', action: 'open_service_detail', payload: 'casier-judiciaire' },
-        { id: 'order_admin_duo', label: '📦 Demander Pack Duo (6 500 F)', action: 'open_service_detail', payload: 'pack-nationalite-casier' },
-        { id: 'admin_docs', label: '📋 Vérifier les pièces requises', action: 'faq_admin_docs' }
+        { id: 'order_admin_duo', label: '📦 Commander Pack Duo (6 500 F)', action: 'select_service_direct', payload: 'pack-nationalite-casier', primary: true },
+        { id: 'order_admin_nat', label: '⚖️ Certificat Nationalité (3 500 F)', action: 'select_service_direct', payload: 'certificat-nationalite' },
+        { id: 'order_admin_casier', label: '⚖️ Casier Judiciaire (3 500 F)', action: 'select_service_direct', payload: 'casier-judiciaire' }
       ]
     };
   }
 
-  // 4. REQUIRED DOCUMENTS FOR ADMINISTRATIVE
-  if (norm.includes('papier') || norm.includes('document') || norm.includes('piece') || norm.includes('justificatif')) {
-    return {
-      id: `bot_${Date.now()}`,
-      sender: 'bot',
-      text: `📋 **Pièces à fournir pour vos démarches officielles :**\n\n🔹 **Pour le Certificat de Nationalité (3 500 F) :**\n• Extrait d'acte de naissance ou copie intégrale\n• Photocopie CNI / Passeport / Attestation du demandeur\n• Pièce d'identité ou Certificat de nationalité d'un parent ivoirien\n• 1 photo d'identité couleur récente\n\n🔹 **Pour le Casier Judiciaire (3 500 F) :**\n• Extrait d'acte de naissance lisible\n• Photocopie CNI / Passeport valide\n• Précision du lieu & date de naissance pour le greffe compétent\n\n📲 *Vous pouvez simplement envoyer les photos ou scans de ces pièces directement sur WhatsApp.*`,
-      timestamp: now,
-      widgetType: 'docs_checklist',
-      quickReplies: [
-        { id: 'order_admin_duo', label: '🚀 Démarrer la démarche maintenant', action: 'open_service_detail', payload: 'pack-nationalite-casier', primary: true },
-        { id: 'start_guided_order', label: 'Autres services', action: 'start_wizard' }
-      ]
-    };
-  }
-
-  // 5. PAYMENT / WAVE / SECURITY QUESTIONS
+  // 4. PAYMENT / WAVE / SECURITY QUESTIONS
   if (norm.includes('payer') || norm.includes('paiement') || norm.includes('wave') || norm.includes('orange') || norm.includes('mtn') || norm.includes('moov') || norm.includes('reglement') || norm.includes('livraison')) {
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `💳 **Modalités de Paiement & Garanties Sécurisées :**\n\n✅ **Bureautique, Design, PDF & Infographie :**\n• **Règlement à la livraison** sans aucun risque !\n• Vous recevez d'abord un aperçu sécurisé de votre document pour validation.\n• Vous réglez ensuite en 1 clic via le lien officiel **Wave Business** ou Mobile Money envoyé par votre opérateur pour recevoir vos fichiers HD.\n\n⚖️ **Actes Judiciaires (Casier & Nationalité) :**\n• Paiement à l'enregistrement obligatoire pour l'achat des timbres fiscaux d'État.\n• **Reçu officiel de demande et transaction transmis IMMÉDIATEMENT** dès confirmation du règlement.\n• Retrait physique du document sous 72h (3 jours).`,
+      text: `💳 Modalités de Paiement & Sécurité :\n\n✅ Bureautique, Design, PDF & Web :\n• Règlement à la livraison sans aucun risque !\n• Vous recevez un aperçu sécurisé de votre document pour validation.\n• Vous réglez ensuite en 1 clic via le lien officiel Wave Business ou Mobile Money pour recevoir vos fichiers HD.\n\n⚖️ Actes Judiciaires & Inscriptions Publiques :\n• Règlement à l'enregistrement requis pour acquitter les timbres fiscaux d'État et droits ministériels.\n• Reçu officiel immédiat dès confirmation du règlement.\n• Retrait physique du document sous 72h (3 jours).`,
       timestamp: now,
-      quickReplies: [
-        { id: 'start_guided_order', label: '🚀 Passer une commande', action: 'start_wizard', primary: true },
-        { id: 'simulate_price', label: '🧮 Simuler mon montant', action: 'open_calc_modal' }
-      ]
+      quickReplies: INITIAL_POLE_REPLIES
     };
   }
 
-  // 6. TURNAROUND / DELAYS / URGENCY
-  if (norm.includes('delai') || norm.includes('temps') || norm.includes('combien de temps') || norm.includes('heure') || norm.includes('urgent') || norm.includes('express')) {
-    return {
-      id: `bot_${Date.now()}`,
-      sender: 'bot',
-      text: `⏱️ **Nos Délais de Réalisation :**\n\n⚡ **Moins de 2 Heures (Ultra Express)** : Idéal pour modifications urgentes de PDF, CV urgents, conversions.\n🚀 **Moins de 12 Heures (Express Journée)** : Saisie rapide, lettres de motivation, affiches simples.\n⏰ **24 à 48 Heures (Délai Standard)** : Diaporamas PowerPoint, Logos créatifs, gros mémoires.\n⚖️ **72 Heures strictes (3 jours ouvrés)** : Démarches judiciaires (Casier judiciaire & Nationalité au tribunal).\n\n*Précisez votre délai souhaité lors de la commande !*`,
-      timestamp: now,
-      quickReplies: [
-        { id: 'start_guided_order', label: '🚀 Choisir ma prestation', action: 'start_wizard', primary: true },
-        { id: 'contact_human', label: '📞 Urgence immédiate WhatsApp', action: 'contact_advisor' }
-      ]
-    };
-  }
-
-  // 7. SPECIFIC SERVICE MATCHING & VOLUME PRICING CALCULATION
+  // 5. SPECIFIC SERVICE MATCHING & VOLUME PRICING CALCULATION
   const matchedService = findServiceByKeyword(norm);
   const qty = extractQuantityFromQuery(norm);
 
   if (matchedService) {
-    const finalQty = qty || (matchedService.id === 'saisie-texte' ? 55 : (matchedService.id === 'modification-pdf' ? 6 : 1));
+    const finalQty = qty || (matchedService.id === 'saisie-texte' ? 50 : (matchedService.id === 'modification-pdf' ? 5 : 1));
     const pricing = calculateServicePrice(matchedService, finalQty);
     const isCourtService = isAdministrativeService(matchedService);
 
-    let pricingExplanation = `💰 **Tarif : ${matchedService.priceDisplay}** (${matchedService.unitLabel})`;
+    let pricingExplanation = `💰 Tarif : ${matchedService.priceDisplay} (${matchedService.unitLabel})`;
     if (qty && qty > 1) {
-      pricingExplanation = `💰 **Simulation pour ${qty} ${matchedService.unitLabel} :**\n• Prix unitaire : **${formatFCFA(pricing.unitPrice)}**\n• Montant total : **${formatFCFA(pricing.totalPrice)}**${pricing.savings ? `\n🎉 *Économie réalisée : ${formatFCFA(pricing.savings)}*` : ''}`;
+      pricingExplanation = `💰 Simulation pour ${qty} ${matchedService.unitLabel} :\n• Prix unitaire : ${formatFCFA(pricing.unitPrice)}\n• Montant total : ${formatFCFA(pricing.totalPrice)}${pricing.savings ? `\n🎉 Économie : ${formatFCFA(pricing.savings)}` : ''}`;
     } else if (matchedService.volumeRulesDescription) {
-      pricingExplanation += `\n✨ *Tarif dégressif : ${matchedService.volumeRulesDescription}*`;
+      pricingExplanation += `\n✨ Tarif dégressif : ${matchedService.volumeRulesDescription}`;
     }
 
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `📌 **${matchedService.name}**\n\n${matchedService.description}\n\n${pricingExplanation}\n\n⏱️ **Délai :** ${matchedService.deliveryTime}\n\n${isCourtService ? '⚖️ *Procédure officielle : Reçu immédiat dès paiement • Retrait physique du document sous 72h.*' : '🛡️ *Règlement en toute confiance à la livraison après validation de l\'aperçu.*'}`,
+      text: `📌 ${matchedService.name}\n\n${matchedService.description}\n\n${pricingExplanation}\n\n⏱️ Délai : ${matchedService.deliveryTime}\n\n${isCourtService ? '⚖️ Procédure officielle : Reçu officiel immédiat dès paiement • Retrait physique sous 72h.' : '🛡️ Règlement en toute confiance à la livraison après validation de l\'aperçu.'}`,
       timestamp: now,
       widgetType: 'service_card',
       widgetData: {
@@ -318,34 +396,33 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
         pricing
       },
       quickReplies: [
-        { id: `order_${matchedService.id}`, label: `🛒 Configurer & Commander (${formatFCFA(pricing.totalPrice)})`, action: 'open_service_detail', payload: matchedService.id, primary: true },
+        { id: `order_${matchedService.id}`, label: `🛒 Configurer & Commander (${formatFCFA(pricing.totalPrice)})`, action: 'select_service_direct', payload: matchedService.id, primary: true },
         { id: `calc_${matchedService.id}`, label: '🧮 Simuler une autre quantité', action: 'open_calc_modal', payload: matchedService.id },
-        { id: 'see_all_services', label: '👀 Voir les autres services', action: 'scroll_catalog' }
+        { id: 'menu_poles', label: '📋 Retour aux Pôles', action: 'show_poles' }
       ]
     };
   }
 
-  // 8. LOCATION / CONTACT / HOURS
+  // 6. CONTACT / HOURS
   if (norm.includes('contact') || norm.includes('numero') || norm.includes('telephone') || norm.includes('ou') || norm.includes('adresse') || norm.includes('localisation') || norm.includes('horaire')) {
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `📍 **Coordonnées OKBW Bureautique & Design :**\n\n📱 **WhatsApp Principal :** ${CONTACT_INFO.whatsappNumber}\n📞 **Téléphone Secondaire :** ${CONTACT_INFO.secondaryPhone}\n📧 **Email :** ${CONTACT_INFO.email}\n📍 **Localisation :** ${CONTACT_INFO.location}\n🕒 **Disponibilité :** ${CONTACT_INFO.hours}\n\n*Nous prenons en charge vos demandes physiques et à distance avec livraison express partout en Côte d'Ivoire et à l'international !*`,
+      text: `📍 Coordonnées OKBW Bureautique & Design :\n\n📱 WhatsApp Principal : ${CONTACT_INFO.whatsappNumber}\n📞 Téléphone Secondaire : ${CONTACT_INFO.secondaryPhone}\n📧 Email : ${CONTACT_INFO.email}\n📍 Localisation : ${CONTACT_INFO.location}\n🕒 Disponibilité : ${CONTACT_INFO.hours}\n\nNous prenons en charge vos demandes physiques et à distance avec livraison express partout en Côte d'Ivoire !`,
       timestamp: now,
       quickReplies: [
         { id: 'contact_whatsapp', label: '💬 Écrire sur WhatsApp', action: 'contact_advisor', primary: true },
-        { id: 'start_guided_order', label: '🚀 Démarrer une commande', action: 'start_wizard' }
+        { id: 'menu_poles', label: '🚀 Démarrer une commande', action: 'show_poles' }
       ]
     };
   }
 
-  // 9. FALLBACK INTELLIGENT MATCH
+  // 7. FALLBACK
   return {
     id: `bot_${Date.now()}`,
     sender: 'bot',
-    text: `Je peux vous aider à commander, calculer un tarif exact ou vous orienter parmi toutes nos prestations :\n\n• **Bureautique & Rédaction :** CV canadiens/pros, saisie de thèses/mémoires, lettres de motivation, diaporamas.\n• **Design Graphique :** Logos, affiches, retouches photos anciennes, cartes de visite.\n• **Solutions PDF :** Modifications sans trace, conversions Word/Excel.\n• **Actes Judiciaires (72h) :** Casier judiciaire, Certificat de nationalité ivoirienne.\n\nSélectionnez une option rapide ou dites-moi précisément ce dont vous avez besoin :`,
+    text: `Je peux vous aider à configurer votre commande, calculer votre tarif dégressif ou répondre à vos questions.\n\nChoisissez un pôle ci-dessous pour démarrer :`,
     timestamp: now,
-    quickReplies: INITIAL_QUICK_REPLIES
+    quickReplies: INITIAL_POLE_REPLIES
   };
 }
-

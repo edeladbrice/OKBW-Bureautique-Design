@@ -490,5 +490,51 @@ export const SERVICES_DATA: ServiceItem[] = [
     icon: 'Layers',
     deliveryTime: '72h strictes (3 jours) • Reçu immédiat dès paiement',
     recommended: true
+  },
+
+  // 7. INSCRIPTIONS EN LIGNE SCOLAIRES (6ème à Terminale)
+  {
+    id: 'inscription-privee',
+    name: 'Inscription en Ligne - Établissement Privé & Semi-Privé',
+    category: 'scolaire',
+    basePrice: 3500,
+    priceDisplay: '3 500 F',
+    unitLabel: 'par élève',
+    targetAudience: 'Élèves du secteur privé et semi-privé (Tout niveau de la 6ème à la Terminale)',
+    description: 'Prise en charge complète de l\'inscription en ligne pour tout niveau du secondaire (de la 6ème à la Tle) dans les établissements privés et semi-privés : création de compte de scolarité, saisie des formulaires officiels, téléversement des pièces justificatives et validation de la fiche d\'inscription.',
+    promoNote: '👉 Tarif fixe : 3 500 F pour tout niveau (6ème à Tle) en privé et semi-privé.',
+    inclusions: [
+      'Création et sécurisation du compte élève (6ème à Tle)',
+      'Renseignement scrupuleux de la fiche d\'inscription officielle',
+      'Numérisation et cadrage des pièces jointes (bulletins, extraits, photos)',
+      'Édition et transmission de la fiche d\'inscription validée en PDF HD',
+      'Assistance WhatsApp continue pour le suivi du dossier'
+    ],
+    badge: 'Rentrée Sérénité',
+    icon: 'GraduationCap',
+    deliveryTime: '2h à 12h max',
+    recommended: true
+  },
+  {
+    id: 'inscription-publique',
+    name: 'Inscription en Ligne - Établissement Public & MENA',
+    category: 'scolaire',
+    basePrice: 6500,
+    priceDisplay: '6 500 F',
+    unitLabel: 'par élève',
+    targetAudience: 'Élèves des établissements publics (Tout niveau de la 6ème à la Terminale - Inscription MENA)',
+    description: 'Traitement officiel de votre inscription en ligne pour les établissements publics (MENA) de la 6ème à la Terminale. Intègre le paiement des droits obligatoires d\'État, la vérification du matricule MENA et l\'édition du reçu officiel d\'inscription.',
+    promoNote: '👉 Tarif officiel : 6 500 F pour tout niveau (6ème à Tle) en établissement public avec reçu officiel garanti.',
+    inclusions: [
+      'Vérification et déblocage du matricule officiel MENA',
+      'Paiement dématérialisé sécurisé des frais d\'inscription d\'État',
+      'Génération & transmission immédiate du reçu officiel d\'inscription avec QR Code',
+      'Contrôle anti-erreur d\'affectation ou d\'établissement',
+      'Archivage numérique du reçu et envoi sur votre WhatsApp'
+    ],
+    badge: 'Officiel Public',
+    icon: 'School',
+    deliveryTime: '2h à 24h max',
+    recommended: true
   }
 ];

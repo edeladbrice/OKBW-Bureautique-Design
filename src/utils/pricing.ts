@@ -93,9 +93,18 @@ export function buildWhatsAppFormattedMessage(params: {
   message += `• Quantité / Pages : ${params.quantityText}\n`;
   message += `• Nom du client : ${name}\n`;
   message += `• Instructions : ${instructions}\n`;
-  message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
-  message += `Je vous joins mes fichiers ci-dessous dans cette discussion.\n`;
-  message += `(J'attends la finalisation du travail pour recevoir le lien de paiement Wave Business).\n\n`;
+  
+  if (params.isAdministrative) {
+    message += `• Montant total : ${formatFCFA(params.totalAmount)}\n`;
+    message += `• Modalité : Règlement à l'enregistrement (Timbres fiscaux & greffe) • Reçu officiel immédiat dès paiement • Retrait physique sous 72h\n\n`;
+    message += `Je vous joins les photos/scans de mes pièces justificatives ci-dessous dans cette discussion.\n`;
+    message += `(J'attends la confirmation de la commande pour recevoir le lien de paiement Wave Business).\n\n`;
+  } else {
+    message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
+    message += `Je vous joins mes fichiers ci-dessous dans cette discussion.\n`;
+    message += `(J'attends la finalisation du travail pour recevoir le lien de paiement Wave Business).\n\n`;
+  }
+  
   message += `---\n`;
   message += `Contacts : ${DISPLAY_CONTACTS}`;
 

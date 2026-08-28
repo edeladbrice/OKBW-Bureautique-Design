@@ -5,6 +5,7 @@ export type ServiceCategory =
   | 'optimisation'
   | 'pdf'
   | 'web'
+  | 'scolaire'
   | 'administratif';
 
 export interface PricingTier {
@@ -17,7 +18,7 @@ export interface PricingTier {
 export interface ServiceItem {
   id: string;
   name: string;
-  category: 'bureautique' | 'design' | 'optimisation' | 'pdf' | 'web' | 'administratif';
+  category: 'bureautique' | 'design' | 'optimisation' | 'pdf' | 'web' | 'scolaire' | 'administratif';
   basePrice: number;
   maxPrice?: number;
   priceDisplay: string;
