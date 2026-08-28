@@ -44,7 +44,9 @@ import {
   GREETING_MESSAGE, 
   INITIAL_QUICK_REPLIES, 
   processUserQuery, 
-  StepWizardState 
+  StepWizardState,
+  CLIENT_SCENARIOS,
+  IVORIAN_TRIBUNALS
 } from '../utils/guideBotEngine';
 
 interface SmartGuideBotProps {
@@ -54,6 +56,7 @@ interface SmartGuideBotProps {
   onOpenCalculatorModal: (serviceId?: string) => void;
   onAddToCart: (service: ServiceItem, quantity: number, notes?: string) => void;
   onScrollToCatalog: () => void;
+  initialQuery?: string;
 }
 
 export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
@@ -62,12 +65,14 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
   onOpenServiceModal,
   onOpenCalculatorModal,
   onAddToCart,
-  onScrollToCatalog
+  onScrollToCatalog,
+  initialQuery
 }) => {
   const [messages, setMessages] = useState<BotMessage[]>([GREETING_MESSAGE]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const lastProcessedQueryRef = useRef<string | undefined>(undefined);
 
   // Guided Wizard State
   const [wizardState, setWizardState] = useState<StepWizardState | null>(null);
@@ -84,8 +89,24 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
     if (isOpen) {
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 150);
+
+      // If an initialQuery was passed and hasn't been sent yet for this open session
+      if (initialQuery && initialQuery !== lastProcessedQueryRef.current) {
+        lastProcessedQueryRef.current = initialQuery;
+        setTimeout(() => {
+          handleSendMessage(initialQuery);
+        }, 200);
+      }
+    } else {
+      lastProcessedQueryRef.current = undefined;
     }
-  }, [isOpen, messages, isTyping, wizardState]);
+  }, [isOpen, initialQuery]);
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isTyping, wizardState]);
 
   // Restart chat
   const handleResetChat = () => {
@@ -117,6 +138,26 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
     setIsTyping(true);
 
     setTimeout(() => {
+      // If currently in details step of the state machine, capture the user's input as customer name / notes
+      if (wizardState && wizardState.step === 'details') {
+        const lines = query.split('\n').map(l => l.trim()).filter(Boolean);
+        const nameInput = lines[0] || query;
+        const notesInput = lines.length > 1 ? lines.slice(1).join(' | ') : '';
+        handleWizardFinish(nameInput, notesInput);
+        setIsTyping(false);
+        return;
+      }
+
+      // If currently in quantity step and user typed a number
+      if (wizardState && wizardState.step === 'quantity') {
+        const num = parseInt(query.replace(/\D/g, ''), 10);
+        if (!isNaN(num) && num > 0) {
+          handleWizardSetQuantity(num);
+          setIsTyping(false);
+          return;
+        }
+      }
+
       const botResponse = processUserQuery(query, wizardState || undefined);
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
@@ -438,14 +479,14 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-extrabold text-sm sm:text-base font-['Outfit'] tracking-wide">
-                  Guide Pas-à-Pas OKBW
+                  DEMS • Conseiller Virtuel
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold">
-                  Intelligent
+                  En ligne
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 flex items-center space-x-1">
-                <span>Sans attente • Devis & Conseils 24/7</span>
+                <span>OKBW Bureautique & Design • Devis & Commande 24/7</span>
               </p>
             </div>
           </div>
@@ -590,7 +631,73 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
                   </div>
                 )}
 
-                {/* 4. Order Summary Widget */}
+                {/* 4. Scenario Guide Widget */}
+                {msg.widgetType === 'scenario_guide' && (
+                  <div className="mt-3 space-y-2">
+                    {CLIENT_SCENARIOS.map((sc) => (
+                      <div 
+                        key={sc.id}
+                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#0F52BA] transition-all space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-xs text-[#0F52BA] dark:text-blue-400">
+                            {sc.title}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                            {sc.delay}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                          {sc.desc}
+                        </p>
+                        <div className="pt-1 flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-[#FF5E14]">
+                            {sc.recommendation}
+                          </span>
+                          <button
+                            onClick={() => {
+                              const s = SERVICES_DATA.find(srv => srv.id === sc.serviceIds[0]);
+                              if (s) onOpenServiceModal(s);
+                            }}
+                            className="text-[11px] font-bold text-[#0F52BA] dark:text-blue-400 hover:underline flex items-center space-x-1"
+                          >
+                            <span>Détails</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 5. Document Checklist Widget */}
+                {msg.widgetType === 'docs_checklist' && (
+                  <div className="mt-3 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 space-y-2 text-xs">
+                    <div className="flex items-center space-x-2 font-extrabold text-[#0F52BA] dark:text-blue-300">
+                      <FileCheck2 className="w-4 h-4 text-[#FF5E14]" />
+                      <span>Checklist de vos documents à transmettre</span>
+                    </div>
+                    <div className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300">
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <span>Extrait de naissance original / copie lisible</span>
+                        <span className="text-[10px] font-bold text-emerald-600">Photo / Scan</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <span>CNI ou Passeport valide du demandeur</span>
+                        <span className="text-[10px] font-bold text-emerald-600">Photo / Scan</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <span>Lieu de naissance pour attribution du greffe</span>
+                        <span className="text-[10px] font-bold text-blue-600">Texte WhatsApp</span>
+                      </div>
+                    </div>
+                    <div className="pt-1 text-[10px] text-slate-500 dark:text-slate-400 italic">
+                      *Envoyez simplement ces éléments par photo nette sur WhatsApp après avoir cliqué sur le bouton de commande.*
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. Order Summary Widget */}
                 {msg.widgetType === 'order_summary' && msg.widgetData && (
                   <div className="mt-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/80 space-y-3">
                     <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-extrabold text-xs">
@@ -606,7 +713,7 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
                         className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-md shadow-emerald-950/20 transition-all text-center"
                       >
                         <MessageSquare className="w-4 h-4" />
-                        <span>Envoyer sur WhatsApp</span>
+                        <span>Valider et envoyer sur WhatsApp</span>
                       </a>
 
                       <button

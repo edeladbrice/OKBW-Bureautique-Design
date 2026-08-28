@@ -17,7 +17,7 @@ export interface BotMessage {
   text: string;
   timestamp: Date;
   quickReplies?: BotQuickReply[];
-  widgetType?: 'service_card' | 'quick_calculator' | 'admin_procedure' | 'step_wizard' | 'order_summary' | 'faq_list';
+  widgetType?: 'service_card' | 'quick_calculator' | 'admin_procedure' | 'step_wizard' | 'order_summary' | 'faq_list' | 'tribunal_checker' | 'docs_checklist' | 'scenario_guide';
   widgetData?: any;
 }
 
@@ -31,20 +31,65 @@ export interface StepWizardState {
   customerNotes?: string;
 }
 
+export const IVORIAN_TRIBUNALS = [
+  { name: 'Tribunal de Première Instance d\'Abidjan - Plateau', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
+  { name: 'Section de Tribunal de Yopougon', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
+  { name: 'Tribunal de Première Instance de Bouaké', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
+  { name: 'Section de Tribunal de Daloa', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
+  { name: 'Section de Tribunal de San Pedro', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
+  { name: 'Section de Tribunal de Korhogo', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' },
+  { name: 'Section de Tribunal de Gagnoa / Man', delay: '72h ouvrées', stamp: 'Timbre d\'État inclus' }
+];
+
+export const CLIENT_SCENARIOS = [
+  {
+    id: 'sc_job',
+    title: '💼 Candidature & Emploi',
+    desc: 'CV Professionnel + Lettre de motivation percutante + Costume virtuel.',
+    recommendation: 'Pack CV Premium + Lettre de motivation',
+    serviceIds: ['cv-premium', 'lettre-motivation'],
+    delay: '2h à 12h'
+  },
+  {
+    id: 'sc_court',
+    title: '⚖️ Concours & Administratif',
+    desc: 'Casier Judiciaire (Bulletin N°3) + Certificat de Nationalité officiel.',
+    recommendation: 'Pack Duo Nationalité & Casier (6 500 F)',
+    serviceIds: ['pack-nationalite-casier'],
+    delay: '72h (Reçu immédiat dès paiement)'
+  },
+  {
+    id: 'sc_student',
+    title: '🎓 Étudiant & Soutenance',
+    desc: 'Saisie de mémoire dégressive (200 F/p dès 50p) + Diaporama PowerPoint.',
+    recommendation: 'Saisie Texte Pro + PowerPoint Soutenance',
+    serviceIds: ['saisie-texte', 'presentation-powerpoint'],
+    delay: '24h à 48h'
+  },
+  {
+    id: 'sc_biz',
+    title: '🚀 Entreprise & Commerce',
+    desc: 'Logo vectoriel HD + Carte de visite + Affiche pub + Site vitrine.',
+    recommendation: 'Pack Création Identité & Web',
+    serviceIds: ['creation-logo', 'carte-de-visite', 'web-vitrine'],
+    delay: '24h à 72h'
+  }
+];
+
 export const INITIAL_QUICK_REPLIES: BotQuickReply[] = [
-  { id: 'start_guided_order', label: '🚀 Commander pas à pas', action: 'start_wizard', icon: 'Sparkles', primary: true },
-  { id: 'admin_services', label: '⚖️ Casier / Nationalité (72h)', action: 'category_admin', icon: 'Scale' },
-  { id: 'simulate_price', label: '🧮 Simuler un prix / Devis', action: 'open_calc_modal', icon: 'Calculator' },
-  { id: 'cv_services', label: '📄 Création de CV Pro', action: 'show_cv', icon: 'FileUser' },
-  { id: 'pdf_services', label: '🛠️ Modifier / Convertir un PDF', action: 'show_pdf', icon: 'FileEdit' },
-  { id: 'payment_faq', label: '💳 Comment payer (Wave) ?', action: 'faq_payment', icon: 'ShieldCheck' },
-  { id: 'contact_human', label: '📞 Joindre un conseiller', action: 'contact_advisor', icon: 'Phone' }
+  { id: 'start_guided_order', label: '🚀 Guide de commande pas à pas', action: 'start_wizard', icon: 'Sparkles', primary: true },
+  { id: 'admin_services', label: '⚖️ Casier & Nationalité (72h)', action: 'category_admin', icon: 'Scale' },
+  { id: 'scenario_help', label: '🎯 Guide selon votre profil (CV, Mémoire, Concours)', action: 'show_scenarios', icon: 'User' },
+  { id: 'simulate_price', label: '🧮 Calculer un devis instantané', action: 'open_calc_modal', icon: 'Calculator' },
+  { id: 'cv_services', label: '📄 CV Pro & Costume virtuel (1 000 F)', action: 'show_cv', icon: 'FileUser' },
+  { id: 'pdf_services', label: '🛠️ Modifier un PDF sans trace', action: 'show_pdf', icon: 'FileEdit' },
+  { id: 'payment_faq', label: '💳 Sécurité & Paiement Wave', action: 'faq_payment', icon: 'ShieldCheck' }
 ];
 
 export const GREETING_MESSAGE: BotMessage = {
   id: 'msg_welcome',
   sender: 'bot',
-  text: `👋 Bonjour et bienvenue chez **OKBW Bureautique & Design** !\n\nJe suis votre **Guide Intelligent Pas-à-Pas**. Je suis là pour vous orienter, estimer vos tarifs en direct, vous expliquer les démarches officielles et préparer votre commande en quelques secondes sans attendre.\n\nQue souhaitez-vous faire aujourd'hui ?`,
+  text: `👋 Bonjour et bienvenue chez OKBW Bureautique & Design !\n\nJe suis DEMS, votre conseiller interactif et orchestrateur de commande en ligne.\n\nJe suis là pour vous orienter en direct :\n✨ Trouver le service idéal selon vos besoins (Bureautique, CV Pro, Design, Solutions PDF, Actes de justice 72h)\n🧮 Calculer automatiquement vos tarifs dégressifs en FCFA\n🚀 Enregistrer et transmettre votre commande pré-remplie directement sur WhatsApp en 1 clic.\n\nQue souhaitez-vous réaliser aujourd'hui ?`,
   timestamp: new Date(),
   quickReplies: INITIAL_QUICK_REPLIES
 };
@@ -77,7 +122,7 @@ export function findServiceByKeyword(query: string): ServiceItem | undefined {
   if (norm.includes('cv') || norm.includes('curriculum')) {
     return SERVICES_DATA.find(s => s.id === 'cv-standard') || SERVICES_DATA.find(s => s.id === 'cv-premium');
   }
-  if (norm.includes('saisie') || norm.includes('memoire') || norm.includes('these') || norm.includes('manuscrit') || norm.includes('dactylographie')) {
+  if (norm.includes('saisie') || norm.includes('memoire') || norm.includes('these') || norm.includes('manuscrit') || norm.includes('dactylographie') || norm.includes('page')) {
     return SERVICES_DATA.find(s => s.id === 'saisie-texte');
   }
   if (norm.includes('lettre') || norm.includes('motivation') || norm.includes('demande')) {
@@ -98,7 +143,7 @@ export function findServiceByKeyword(query: string): ServiceItem | undefined {
   if (norm.includes('carte de visite') || norm.includes('visite')) {
     return SERVICES_DATA.find(s => s.id === 'carte-de-visite');
   }
-  if (norm.includes('modifier pdf') || norm.includes('retouche pdf') || (norm.includes('pdf') && norm.includes('modif'))) {
+  if (norm.includes('modifier pdf') || norm.includes('retouche pdf') || (norm.includes('pdf') && (norm.includes('modif') || norm.includes('editer') || norm.includes('changer')))) {
     return SERVICES_DATA.find(s => s.id === 'modification-pdf');
   }
   if (norm.includes('conversion') || norm.includes('convertir') || norm.includes('word en pdf') || norm.includes('pdf en word')) {
@@ -124,7 +169,7 @@ export function findServiceByKeyword(query: string): ServiceItem | undefined {
   });
 }
 
-// Extract number from message for volume calculation (e.g., "combien pour 75 pages")
+// Extract number from message for volume calculation
 export function extractQuantityFromQuery(query: string): number | null {
   const match = query.match(/\b(\d{1,5})\b/);
   if (match && match[1]) {
@@ -146,13 +191,31 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `👋 Bonjour ! Comment puis-je vous guider aujourd'hui ? Choisissez une option rapide ci-dessous ou posez-moi votre question en quelques mots :`,
+      text: `👋 Bonjour ! Comment puis-je vous orienter aujourd'hui ? Choisissez une option rapide ci-dessous ou posez-moi directement votre question :`,
       timestamp: now,
       quickReplies: INITIAL_QUICK_REPLIES
     };
   }
 
-  // 2. ADMINISTRATIVE & COURT PROCEDURES (Casier / Nationalité)
+  // 2. SCENARIOS GUIDE (Profiling)
+  if (norm.includes('profil') || norm.includes('scenario') || norm.includes('etudiant') || norm.includes('concours') || norm.includes('emploi') || norm.includes('entreprise')) {
+    return {
+      id: `bot_${Date.now()}`,
+      sender: 'bot',
+      text: `🎯 **Guide Personnalisé selon votre Situation :**\n\nChoisissez votre objectif pour voir immédiatement le pack recommandé, les délais et les pièces nécessaires :`,
+      timestamp: now,
+      widgetType: 'scenario_guide',
+      widgetData: CLIENT_SCENARIOS,
+      quickReplies: [
+        { id: 'sc_job_btn', label: '💼 Emploi & Recrutement (CV Pro)', action: 'show_cv', primary: true },
+        { id: 'sc_court_btn', label: '⚖️ Concours & Actes (Casier/Nat)', action: 'category_admin' },
+        { id: 'sc_student_btn', label: '🎓 Étudiant (Mémoire/Soutenance)', action: 'show_student_pack' },
+        { id: 'sc_biz_btn', label: '🚀 Entreprise (Logo & Web)', action: 'show_business_pack' }
+      ]
+    };
+  }
+
+  // 3. ADMINISTRATIVE & COURT PROCEDURES (Casier / Nationalité)
   if (
     norm.includes('casier') || 
     norm.includes('nationalite') || 
@@ -176,21 +239,22 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
       widgetType: 'admin_procedure',
       widgetData: targetService || SERVICES_DATA.find(s => s.id === 'certificat-nationalite'),
       quickReplies: [
-        { id: 'order_admin_nat', label: '⚖️ Demander Certificat Nationalité', action: 'open_service_detail', payload: 'certificat-nationalite', primary: true },
-        { id: 'order_admin_casier', label: '⚖️ Demander Casier Judiciaire', action: 'open_service_detail', payload: 'casier-judiciaire' },
+        { id: 'order_admin_nat', label: '⚖️ Demander Certificat Nationalité (3 500 F)', action: 'open_service_detail', payload: 'certificat-nationalite', primary: true },
+        { id: 'order_admin_casier', label: '⚖️ Demander Casier Judiciaire (3 500 F)', action: 'open_service_detail', payload: 'casier-judiciaire' },
         { id: 'order_admin_duo', label: '📦 Demander Pack Duo (6 500 F)', action: 'open_service_detail', payload: 'pack-nationalite-casier' },
-        { id: 'admin_docs', label: '📋 Quels papiers fournir ?', action: 'faq_admin_docs' }
+        { id: 'admin_docs', label: '📋 Vérifier les pièces requises', action: 'faq_admin_docs' }
       ]
     };
   }
 
-  // 3. REQUIRED DOCUMENTS FOR ADMINISTRATIVE
+  // 4. REQUIRED DOCUMENTS FOR ADMINISTRATIVE
   if (norm.includes('papier') || norm.includes('document') || norm.includes('piece') || norm.includes('justificatif')) {
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
       text: `📋 **Pièces à fournir pour vos démarches officielles :**\n\n🔹 **Pour le Certificat de Nationalité (3 500 F) :**\n• Extrait d'acte de naissance ou copie intégrale\n• Photocopie CNI / Passeport / Attestation du demandeur\n• Pièce d'identité ou Certificat de nationalité d'un parent ivoirien\n• 1 photo d'identité couleur récente\n\n🔹 **Pour le Casier Judiciaire (3 500 F) :**\n• Extrait d'acte de naissance lisible\n• Photocopie CNI / Passeport valide\n• Précision du lieu & date de naissance pour le greffe compétent\n\n📲 *Vous pouvez simplement envoyer les photos ou scans de ces pièces directement sur WhatsApp.*`,
       timestamp: now,
+      widgetType: 'docs_checklist',
       quickReplies: [
         { id: 'order_admin_duo', label: '🚀 Démarrer la démarche maintenant', action: 'open_service_detail', payload: 'pack-nationalite-casier', primary: true },
         { id: 'start_guided_order', label: 'Autres services', action: 'start_wizard' }
@@ -198,7 +262,7 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     };
   }
 
-  // 4. PAYMENT / WAVE / SECURITY QUESTIONS
+  // 5. PAYMENT / WAVE / SECURITY QUESTIONS
   if (norm.includes('payer') || norm.includes('paiement') || norm.includes('wave') || norm.includes('orange') || norm.includes('mtn') || norm.includes('moov') || norm.includes('reglement') || norm.includes('livraison')) {
     return {
       id: `bot_${Date.now()}`,
@@ -212,7 +276,7 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     };
   }
 
-  // 5. TURNAROUND / DELAYS / URGENCY
+  // 6. TURNAROUND / DELAYS / URGENCY
   if (norm.includes('delai') || norm.includes('temps') || norm.includes('combien de temps') || norm.includes('heure') || norm.includes('urgent') || norm.includes('express')) {
     return {
       id: `bot_${Date.now()}`,
@@ -226,14 +290,13 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     };
   }
 
-  // 6. SPECIFIC SERVICE MATCHING & VOLUME PRICING CALCULATION
+  // 7. SPECIFIC SERVICE MATCHING & VOLUME PRICING CALCULATION
   const matchedService = findServiceByKeyword(norm);
   const qty = extractQuantityFromQuery(norm);
 
   if (matchedService) {
     const finalQty = qty || (matchedService.id === 'saisie-texte' ? 55 : (matchedService.id === 'modification-pdf' ? 6 : 1));
     const pricing = calculateServicePrice(matchedService, finalQty);
-
     const isCourtService = isAdministrativeService(matchedService);
 
     let pricingExplanation = `💰 **Tarif : ${matchedService.priceDisplay}** (${matchedService.unitLabel})`;
@@ -262,7 +325,7 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     };
   }
 
-  // 7. LOCATION / CONTACT / HOURS
+  // 8. LOCATION / CONTACT / HOURS
   if (norm.includes('contact') || norm.includes('numero') || norm.includes('telephone') || norm.includes('ou') || norm.includes('adresse') || norm.includes('localisation') || norm.includes('horaire')) {
     return {
       id: `bot_${Date.now()}`,
@@ -276,7 +339,7 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     };
   }
 
-  // 8. FALLBACK INTELLIGENT MATCH
+  // 9. FALLBACK INTELLIGENT MATCH
   return {
     id: `bot_${Date.now()}`,
     sender: 'bot',
@@ -285,3 +348,4 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     quickReplies: INITIAL_QUICK_REPLIES
   };
 }
+

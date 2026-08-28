@@ -88,30 +88,14 @@ export function buildWhatsAppFormattedMessage(params: {
   const instructions = params.instructions?.trim() ? params.instructions.trim() : 'Prestation standard';
 
   let message = `Bonjour OKBW Bureautique & Design !\n`;
-
-  if (params.isAdministrative) {
-    message += `Je souhaite effectuer une démarche administrative / judiciaire :\n\n`;
-    message += `• Acte demandé : ${params.serviceName}\n`;
-    message += `• Quantité / Dossiers : ${params.quantityText}\n`;
-    message += `• Nom du demandeur : ${name}\n`;
-    message += `• Précisions / Mentions : ${instructions}\n`;
-    message += `• Montant total de la demande : ${formatFCFA(params.totalAmount)}\n\n`;
-    message += `⚖️ RAPPEL DES CONDITIONS & DÉLAIS OFFICIELS :\n`;
-    message += `1. Paiement obligatoire pour engager la demande et régler les timbres fiscaux & greffe.\n`;
-    message += `2. Reçu officiel de demande et transaction transmis IMMÉDIATEMENT dès confirmation du paiement.\n`;
-    message += `3. Retrait et délivrance du document officiel sous 72h (3 jours ouvrés après la demande).\n\n`;
-    message += `Je vous transmets mes pièces justificatives ci-dessous dans cette discussion pour initier le traitement.\n\n`;
-  } else {
-    message += `Je souhaite passer une commande :\n\n`;
-    message += `• Service : ${params.serviceName}\n`;
-    message += `• Quantité / Pages : ${params.quantityText}\n`;
-    message += `• Nom du client : ${name}\n`;
-    message += `• Instructions : ${instructions}\n`;
-    message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
-    message += `Je vous joins mes fichiers ci-dessous dans cette discussion. \n`;
-    message += `(J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).\n\n`;
-  }
-
+  message += `Voici le récapitulatif de ma commande via le Bot du site :\n\n`;
+  message += `• Service : ${params.serviceName}\n`;
+  message += `• Quantité / Pages : ${params.quantityText}\n`;
+  message += `• Nom du client : ${name}\n`;
+  message += `• Instructions : ${instructions}\n`;
+  message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
+  message += `Je vous joins mes fichiers ci-dessous dans cette discussion.\n`;
+  message += `(J'attends la finalisation du travail pour recevoir le lien de paiement Wave Business).\n\n`;
   message += `---\n`;
   message += `Contacts : ${DISPLAY_CONTACTS}`;
 

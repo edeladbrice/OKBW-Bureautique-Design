@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -8,14 +8,18 @@ import {
   ShieldCheck, 
   Clock, 
   CreditCard, 
-  MessageSquare,
-  CheckCircle2,
-  Layers,
-  ChevronDown,
-  Globe,
-  FileCheck2,
-  ExternalLink,
-  TrendingUp
+  MessageSquare, 
+  CheckCircle2, 
+  Layers, 
+  ChevronDown, 
+  Globe, 
+  FileCheck2, 
+  ExternalLink, 
+  TrendingUp,
+  Bot,
+  Scale,
+  Briefcase,
+  GraduationCap
 } from 'lucide-react';
 import { CONTACT_INFO } from '../data/servicesData';
 import { OkbwLogo } from './OkbwLogo';
@@ -24,8 +28,47 @@ interface HeroProps {
   onOpenCalculator: () => void;
   onExploreServices: () => void;
   onOpenAdminGuide?: () => void;
-  onOpenGuideBot?: () => void;
+  onOpenGuideBot?: (initialTopic?: string) => void;
 }
+
+const HERO_PROFILES = [
+  {
+    id: 'emploi',
+    label: '💼 Emploi / CV',
+    title: 'Pack Recrutement & CV Pro',
+    price: '1 000 F',
+    desc: 'CV Canadien ATS + Costume virtuel + Lettre de motivation (500 F)',
+    delay: '< 12 Heures',
+    query: 'Je cherche un emploi et je veux optimiser mon CV et ma lettre de motivation'
+  },
+  {
+    id: 'justice',
+    label: '⚖️ Justice 72h',
+    title: 'Casier Judiciaire & Nationalité',
+    price: '3 500 F',
+    desc: 'Démarches tribunal officielles. Reçu immédiat • Retrait sous 72h (3j)',
+    delay: '72h strictes',
+    query: 'Je veux commander un Casier Judiciaire et un Certificat de Nationalité'
+  },
+  {
+    id: 'etudiant',
+    label: '🎓 Étudiant / Mémoire',
+    title: 'Saisie Mémoire & Diaporama',
+    price: '200 F / page',
+    desc: 'Mise en page universitaire rigoureuse + Diaporama soutenance (2 500 F)',
+    delay: '24h - 48h',
+    query: 'Je suis étudiant et je prépare ma thèse ou soutenance de mémoire'
+  },
+  {
+    id: 'design',
+    label: '🎨 Design & Logo',
+    title: 'Logo & Identité Visuelle',
+    price: '3 500 F',
+    desc: '2 propositions uniques + Fichiers vectoriels HD + Prêt à imprimer',
+    delay: '24h - 48h',
+    query: 'Je veux créer un logo professionnel et des visuels pour mon activité'
+  }
+];
 
 export const Hero: React.FC<HeroProps> = ({ 
   onOpenCalculator, 
@@ -33,6 +76,9 @@ export const Hero: React.FC<HeroProps> = ({
   onOpenAdminGuide,
   onOpenGuideBot
 }) => {
+  const [activeProfileIdx, setActiveProfileIdx] = useState(0);
+  const activeProfile = HERO_PROFILES[activeProfileIdx];
+
   return (
     <section 
       id="hero" 
@@ -40,11 +86,37 @@ export const Hero: React.FC<HeroProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
+        {/* Top Forefront Announcement Bar for Smart Guide */}
+        <div className="mb-4 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-blue-900 via-[#0F52BA] to-slate-900 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-2 border border-blue-400/20">
+          <div className="flex items-center space-x-2 text-xs sm:text-sm font-medium">
+            <span className="p-1 rounded-lg bg-orange-500 text-white">
+              <Bot className="w-4 h-4" />
+            </span>
+            <span>
+              <strong>Besoin d'un devis ou d'un conseil ?</strong> Notre Guide Intelligent vous accompagne pas-à-pas en direct.
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => onOpenGuideBot?.("Quels sont vos packs et tarifs ?")}
+              className="px-3 py-1 rounded-xl bg-orange-500 hover:bg-orange-400 text-white text-xs font-black shadow transition-all flex items-center space-x-1 whitespace-nowrap"
+            >
+              <span>Lancer le Guide 🤖</span>
+            </button>
+            <a
+              href="#guide-client"
+              className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-blue-100 text-xs font-bold transition-colors whitespace-nowrap"
+            >
+              Étapes de commande
+            </a>
+          </div>
+        </div>
+
         {/* Main Bento Grid Hub */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-5 items-stretch">
           
           {/* Bento Cell 1: Main Brand Hero (Span 7 cols) */}
-          <div className="md:col-span-12 lg:col-span-7 bg-[#0F52BA] dark:bg-[#0A3275] rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden flex flex-col justify-between shadow-xl text-white min-h-[380px]">
+          <div className="md:col-span-12 lg:col-span-7 bg-[#0F52BA] dark:bg-[#0A3275] rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden flex flex-col justify-between shadow-xl text-white min-h-[400px]">
             
             {/* Ambient Bento Orbs */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full -mr-20 -mt-20 pointer-events-none blur-xl"></div>
@@ -113,7 +185,7 @@ export const Hero: React.FC<HeroProps> = ({
                 {onOpenGuideBot ? (
                   <button
                     id="hero-bento-bot-btn"
-                    onClick={onOpenGuideBot}
+                    onClick={() => onOpenGuideBot()}
                     className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-5 sm:px-6 py-3 rounded-2xl font-extrabold text-sm backdrop-blur-sm transition-all flex items-center space-x-2"
                   >
                     <span className="text-amber-300 font-black">🤖</span>
@@ -155,82 +227,91 @@ export const Hero: React.FC<HeroProps> = ({
 
           </div>
 
-          {/* Bento Cell 2: Pôle Design (Span 5 cols) */}
-          <div className="md:col-span-12 lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between min-h-[380px]">
+          {/* Bento Cell 2: Forefront Interactive Smart Guide & Profiler Console (Span 5 cols) */}
+          <div className="md:col-span-12 lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between min-h-[400px]">
             <div>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl">🎨</span>
-                  <h2 className="font-bold text-lg sm:text-xl text-[#0F52BA] dark:text-blue-400 font-['Outfit']">Pôle Design & Image</h2>
+                  <span className="p-1.5 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF5E14]">
+                    <Bot className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white font-['Outfit']">
+                      Conseiller & Guide Dédié
+                    </h2>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Orientation immédiate selon votre besoin
+                    </p>
+                  </div>
                 </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF8800] bg-orange-50 dark:bg-orange-950/50 px-2.5 py-1 rounded-full border border-orange-200 dark:border-orange-900/60">
-                  Populaire
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Direct 24/7</span>
                 </span>
               </div>
 
-              <div className="space-y-3">
-                {/* Item 1 */}
-                <div 
-                  onClick={onExploreServices}
-                  className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-orange-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-950/60 rounded-xl flex items-center justify-center text-[#FF8800] font-bold text-sm">
-                      L
-                    </div>
-                    <div>
-                      <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 group-hover:text-[#0F52BA] dark:group-hover:text-blue-400">Logo Sur-Mesure</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">2 variantes + Fichiers HD vectoriels</p>
-                    </div>
-                  </div>
-                  <p className="font-black text-[#0F52BA] dark:text-blue-400 text-sm font-['Outfit']">3 500 F</p>
+              {/* Profile Selector Chips */}
+              <div className="grid grid-cols-2 gap-1.5 mb-3.5">
+                {HERO_PROFILES.map((p, idx) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setActiveProfileIdx(idx)}
+                    className={`px-2.5 py-2 rounded-xl text-xs font-bold text-left transition-all flex items-center justify-between ${
+                      activeProfileIdx === idx
+                        ? 'bg-[#0F52BA] text-white shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 border border-slate-200/80 dark:border-slate-700/80'
+                    }`}
+                  >
+                    <span>{p.label}</span>
+                    {activeProfileIdx === idx && <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>}
+                  </button>
+                ))}
+              </div>
+
+              {/* Active Profile Snapshot Card */}
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-extrabold text-sm text-[#0F52BA] dark:text-blue-400">
+                    {activeProfile.title}
+                  </h3>
+                  <span className="text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                    {activeProfile.price}
+                  </span>
                 </div>
 
-                {/* Item 2 */}
-                <div 
-                  onClick={onExploreServices}
-                  className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-orange-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-950/60 rounded-xl flex items-center justify-center text-[#FF8800] font-bold text-sm">
-                      A
-                    </div>
-                    <div>
-                      <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 group-hover:text-[#0F52BA] dark:group-hover:text-blue-400">Affiche Pub / Événement</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Packs dès 1 000 F / affiche</p>
-                    </div>
-                  </div>
-                  <p className="font-black text-[#0F52BA] dark:text-blue-400 text-sm font-['Outfit']">2 500 F</p>
-                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {activeProfile.desc}
+                </p>
 
-                {/* Item 3 */}
-                <div 
-                  onClick={onExploreServices}
-                  className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 hover:bg-orange-50/50 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-orange-100 dark:bg-orange-950/60 rounded-xl flex items-center justify-center text-[#FF8800] font-bold text-sm">
-                      C
-                    </div>
-                    <div>
-                      <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 group-hover:text-[#0F52BA] dark:group-hover:text-blue-400">Carte de Visite</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Prêt pour impression haute résolution</p>
-                    </div>
-                  </div>
-                  <p className="font-black text-[#0F52BA] dark:text-blue-400 text-sm font-['Outfit']">2 000 F</p>
+                <div className="flex items-center justify-between text-[11px] pt-1 text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700">
+                  <span className="flex items-center space-x-1">
+                    <Clock className="w-3 h-3 text-[#FF5E14]" />
+                    <span>Délai : <strong>{activeProfile.delay}</strong></span>
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {activeProfile.id === 'justice' ? '⚖️ Reçu immédiat' : '🛡️ Règlement sur aperçu'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Retouche photo dès 250 F</span>
-              <a 
-                href="#portfolio" 
-                className="text-[#0F52BA] dark:text-blue-400 font-bold hover:underline flex items-center space-x-1"
+            {/* Actions for active profile */}
+            <div className="pt-3.5 mt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={() => onOpenGuideBot?.(activeProfile.query)}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#0F52BA] to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold text-xs flex items-center justify-center space-x-1.5 shadow-sm transition-all"
               >
-                <span>Galerie</span>
-                <ArrowRight className="w-3 h-3" />
-              </a>
+                <Bot className="w-3.5 h-3.5 text-amber-300" />
+                <span>Ouvrir le Guide Pas-à-Pas</span>
+              </button>
+
+              <button
+                onClick={onOpenCalculator}
+                className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center space-x-1 transition-colors"
+              >
+                <Zap className="w-3.5 h-3.5 text-[#FF5E14]" />
+                <span>Simuler</span>
+              </button>
             </div>
 
           </div>

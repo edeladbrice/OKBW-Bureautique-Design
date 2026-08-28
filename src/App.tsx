@@ -41,7 +41,13 @@ export default function App() {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isAdminGuideOpen, setIsAdminGuideOpen] = useState(false);
   const [isBotOpen, setIsBotOpen] = useState(false);
+  const [botInitialTopic, setBotInitialTopic] = useState<string | undefined>(undefined);
   const [selectedServiceForModal, setSelectedServiceForModal] = useState<ServiceItem | null>(null);
+
+  const handleOpenGuideBot = (topic?: string) => {
+    setBotInitialTopic(topic);
+    setIsBotOpen(true);
+  };
 
   // Sync theme class to html element
   useEffect(() => {
@@ -176,7 +182,7 @@ export default function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
-        onOpenGuideBot={() => setIsBotOpen(true)}
+        onOpenGuideBot={() => handleOpenGuideBot()}
       />
 
       {/* Main Content Sections */}
@@ -186,14 +192,14 @@ export default function App() {
           onOpenCalculator={() => setIsCalculatorOpen(true)}
           onExploreServices={scrollToCatalog}
           onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
-          onOpenGuideBot={() => setIsBotOpen(true)}
+          onOpenGuideBot={handleOpenGuideBot}
         />
 
         {/* Visual Step-by-Step Customer Guide (Orienting Clients) */}
         <CustomerStepGuide
           onExploreCatalog={scrollToCatalog}
           onOpenCalculator={() => setIsCalculatorOpen(true)}
-          onOpenGuideBot={() => setIsBotOpen(true)}
+          onOpenGuideBot={handleOpenGuideBot}
         />
 
         {/* E-commerce Services Catalog & Ordering */}
@@ -228,7 +234,11 @@ export default function App() {
       {/* Smart Intelligent Step-by-Step Guide Bot (100% Zero-API) */}
       <SmartGuideBot
         isOpen={isBotOpen}
-        onClose={() => setIsBotOpen(false)}
+        initialQuery={botInitialTopic}
+        onClose={() => {
+          setIsBotOpen(false);
+          setBotInitialTopic(undefined);
+        }}
         onOpenServiceModal={(service) => {
           setIsBotOpen(false);
           setSelectedServiceForModal(service);

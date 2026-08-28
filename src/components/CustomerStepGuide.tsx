@@ -13,14 +13,20 @@ import {
   HelpCircle,
   ChevronRight,
   Download,
-  Check
+  Check,
+  Bot,
+  Scale,
+  FileCheck2,
+  Briefcase,
+  GraduationCap
 } from 'lucide-react';
 import { CONTACT_INFO } from '../data/servicesData';
+import { CLIENT_SCENARIOS, IVORIAN_TRIBUNALS } from '../utils/guideBotEngine';
 
 interface CustomerStepGuideProps {
   onExploreCatalog: () => void;
   onOpenCalculator: () => void;
-  onOpenGuideBot?: () => void;
+  onOpenGuideBot?: (topic?: string) => void;
 }
 
 export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
@@ -29,6 +35,9 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
   onOpenGuideBot
 }) => {
   const [activeStep, setActiveStep] = useState<number>(0);
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string>('emploi');
+
+  const activeScenario = CLIENT_SCENARIOS.find(s => s.id === selectedScenarioId) || CLIENT_SCENARIOS[0];
 
   const steps = [
     {
@@ -390,6 +399,91 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
               </div>
             </div>
 
+          </div>
+        </div>
+
+        {/* Interactive Scenario Profiler & Documents Checklist Module */}
+        <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-900 via-slate-900 to-slate-950 text-white shadow-xl border border-blue-800/40">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="space-y-1">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold">
+                <Bot className="w-3.5 h-3.5 text-amber-300" />
+                <span>Simulateur de Profil & Démarches Directes</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black font-['Outfit'] tracking-tight">
+                Quel est votre projet ? Découvrez vos étapes & pièces requises
+              </h3>
+            </div>
+
+            {onOpenGuideBot && (
+              <button
+                onClick={() => onOpenGuideBot(activeScenario.title)}
+                className="px-4 py-2 rounded-xl bg-[#FF5E14] hover:bg-[#e04f0f] text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-md shadow-orange-950/40 transition-all self-start md:self-auto"
+              >
+                <Bot className="w-4 h-4" />
+                <span>Ouvrir l'Assistant Dédié</span>
+              </button>
+            )}
+          </div>
+
+          {/* Scenario selector tabs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+            {CLIENT_SCENARIOS.map((sc) => {
+              const isSelected = selectedScenarioId === sc.id;
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => setSelectedScenarioId(sc.id)}
+                  className={`p-3 rounded-2xl text-left border transition-all ${
+                    isSelected
+                      ? 'bg-white/20 border-orange-400 text-white shadow-md'
+                      : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  <p className="text-xs font-bold truncate">{sc.title}</p>
+                  <p className="text-[10px] text-orange-300 font-semibold mt-0.5">{sc.delay}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selected Scenario Detailed Roadmap */}
+          <div className="p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-8 space-y-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-base font-extrabold text-amber-300">
+                  {activeScenario.title}
+                </span>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-bold">
+                  {activeScenario.delay}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                {activeScenario.desc}
+              </p>
+              <div className="p-3 rounded-xl bg-black/30 border border-white/10 space-y-1 text-xs">
+                <p className="text-orange-300 font-bold">💡 Recommandation OKBW :</p>
+                <p className="text-slate-200">{activeScenario.recommendation}</p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 flex flex-col space-y-2.5">
+              <button
+                onClick={() => onOpenGuideBot?.(`Je souhaite démarrer : ${activeScenario.title}`)}
+                className="w-full py-3 px-4 rounded-xl bg-[#0F52BA] hover:bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-lg transition-all"
+              >
+                <Bot className="w-4 h-4 text-amber-300" />
+                <span>Consulter le Guide Pas-à-Pas</span>
+              </button>
+
+              <button
+                onClick={onOpenCalculator}
+                className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors border border-white/20"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-300" />
+                <span>Simuler le tarif</span>
+              </button>
+            </div>
           </div>
         </div>
 

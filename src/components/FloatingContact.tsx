@@ -22,7 +22,7 @@ export const FloatingContact: React.FC<FloatingContactProps> = ({
       
       {/* Bot Interactive Proactive Speech Bubble */}
       {onOpenGuideBot && showTooltip && (
-        <div className="pointer-events-auto relative p-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-[#0F52BA] dark:border-blue-500 shadow-xl max-w-[240px] text-xs text-slate-800 dark:text-slate-100 animate-bounce mb-1">
+        <div className="pointer-events-auto relative p-3 rounded-2xl bg-white dark:bg-slate-900 border-2 border-[#0F52BA] dark:border-blue-500 shadow-xl max-w-[250px] text-xs text-slate-800 dark:text-slate-100 animate-bounce mb-1">
           <button
             onClick={() => setShowTooltip(false)}
             className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] hover:bg-slate-300"
@@ -34,12 +34,12 @@ export const FloatingContact: React.FC<FloatingContactProps> = ({
             onClick={onOpenGuideBot}
             className="cursor-pointer space-y-1"
           >
-            <div className="flex items-center space-x-1 font-extrabold text-[#0F52BA] dark:text-blue-400">
-              <Bot className="w-3.5 h-3.5" />
-              <span>Besoin d'un devis ou guide ?</span>
+            <div className="flex items-center space-x-1.5 font-extrabold text-[#0F52BA] dark:text-blue-400">
+              <Bot className="w-3.5 h-3.5 text-[#FF5E14]" />
+              <span>DEMS • Guide Intelligent</span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-300">
-              Je calcule votre tarif et prépare votre commande pas à pas !
+              Besoin d'un devis ou d'une commande ? Je vous guide pas à pas !
             </p>
           </div>
           {/* Arrow pointing down-right */}
@@ -53,14 +53,14 @@ export const FloatingContact: React.FC<FloatingContactProps> = ({
           id="floating-guide-bot-btn"
           onClick={onOpenGuideBot}
           className="pointer-events-auto group relative flex items-center space-x-2 px-3.5 py-3 rounded-full bg-gradient-to-r from-[#0F52BA] to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold shadow-xl shadow-blue-900/30 hover:scale-105 active:scale-95 transition-all border border-blue-400/40"
-          title="Ouvrir le Guide Intelligent Pas à Pas"
+          title="Ouvrir DEMS (Conseiller et Orchestrateur de commande)"
         >
           <div className="relative">
             <Bot className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF5E14] rounded-full border-2 border-white animate-ping"></span>
           </div>
           <span className="text-xs font-black tracking-wide">
-            Guide Intelligent
+            DEMS • Assistant
           </span>
           <Sparkles className="w-3.5 h-3.5 text-amber-300 hidden sm:inline" />
         </button>
