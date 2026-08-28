@@ -94,8 +94,9 @@ export interface Testimonial {
 
 export interface ContactInfo {
   whatsappNumber: string;
+  secondaryPhone: string;
+  displayContacts: string;
   whatsappUrl: string;
-  wavePaymentUrl: string;
   email: string;
   location: string;
   hours: string;

@@ -374,19 +374,19 @@ export const AdminGuideModal: React.FC<AdminGuideModalProps> = ({ isOpen, onClos
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Étape 2 : Récupérer ses fichiers & valider le paiement Wave
+                  Étape 2 : Réception des fichiers & Réalisation du travail
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Demandez-lui de vous envoyer son ancien CV, son texte Word/PDF ou ses photos. S'il n'a pas encore payé, renvoyez-lui votre lien Wave direct : <code>{CONTACT_INFO.wavePaymentUrl}</code>.
+                  Le client vous envoie ses fichiers sources (photos, manuscrits, brouillons Word/PDF) directement dans la discussion WhatsApp. Vous effectuez le travail selon le délai convenu.
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Étape 3 : Réalisation & Livraison Express (2h à 24h)
+                  Étape 3 : Aperçu, Envoi du lien de paiement Wave & Livraison HD
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Vous réalisez la prestation avec vos standards d'excellence, puis vous lui envoyez le fichier final haute définition (PDF imprimable, PNG HD ou document Word modifiable) directement sur WhatsApp ou par e-mail.
+                  Vous envoyez un aperçu au client pour validation. Une fois validé, vous lui transmettez votre lien de paiement Wave / Mobile Money ({CONTACT_INFO.whatsappNumber} / {CONTACT_INFO.secondaryPhone}) pour régler le montant convenu, puis vous lui débloquez ses fichiers finaux haute définition.
                 </p>
               </div>
             </div>

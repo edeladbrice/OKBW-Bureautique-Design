@@ -46,25 +46,33 @@ export const TURNAROUND_OPTIONS: TurnaroundOption[] = [
   }
 ];
 
-/**
- * Instantiates the exact payment amount into the Wave Payment Link
- * This prevents underpayment and locks the exact expected service price.
- */
-export function generateWavePaymentUrl(amount?: number, memo?: string): string {
-  const baseUrl = CONTACT_INFO.wavePaymentUrl;
-  if (!amount || amount <= 0) {
-    return baseUrl;
-  }
-  
-  const params = new URLSearchParams();
-  params.set('amount', amount.toString());
-  params.set('currency', 'XOF');
-  if (memo) {
-    params.set('memo', memo.slice(0, 50));
-  }
-  
-  const separator = baseUrl.includes('?') ? '&' : '?';
-  return `${baseUrl}${separator}${params.toString()}`;
+export const PRIMARY_WHATSAPP_NUMBER = '2250141752403';
+export const SECONDARY_CONTACT_NUMBER = '+225 01 40 01 88 31';
+export const DISPLAY_CONTACTS = '+225 01 41 75 24 03 / +225 01 40 01 88 31';
+
+export function buildWhatsAppFormattedMessage(params: {
+  serviceName: string;
+  quantityText: string;
+  customerName?: string;
+  instructions?: string;
+  totalAmount: number;
+}): string {
+  const name = params.customerName?.trim() ? params.customerName.trim() : 'Non renseigné';
+  const instructions = params.instructions?.trim() ? params.instructions.trim() : 'Prestation standard';
+
+  let message = `Bonjour OKBW Bureautique & Design !\n`;
+  message += `Je souhaite passer une commande :\n\n`;
+  message += `• Service : ${params.serviceName}\n`;
+  message += `• Quantité / Pages : ${params.quantityText}\n`;
+  message += `• Nom du client : ${name}\n`;
+  message += `• Instructions : ${instructions}\n`;
+  message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n\n`;
+  message += `Je vous joins mes fichiers ci-dessous dans cette discussion. \n`;
+  message += `(J'attends la fin du travail pour recevoir votre lien de paiement Wave et débloquer ma livraison).\n\n`;
+  message += `---\n`;
+  message += `Contacts : ${DISPLAY_CONTACTS}`;
+
+  return message;
 }
 
 export function calculateServicePrice(
@@ -178,37 +186,32 @@ export function generateWhatsAppOrderLink(
 ): string {
   const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
 
-  let message = `Bonjour OKBW Bureautique & Design !\n`;
-  message += `Je souhaite passer une commande :\n\n`;
+  let serviceName = '';
+  let quantityText = '';
 
   if (cart.length === 1) {
     const item = cart[0];
-    message += `- Service : ${item.service.name}\n`;
-    message += `- Quantité / Pages : ${item.quantity} (${item.service.unitLabel})\n`;
+    serviceName = item.service.name;
+    quantityText = `${item.quantity} (${item.service.unitLabel})`;
   } else {
-    message += `- Services commandés (${cart.length}) :\n`;
-    cart.forEach((item, index) => {
-      message += `  ${index + 1}. ${item.service.name} (${item.quantity} ${item.service.unitLabel}) - ${formatFCFA(item.totalPrice)}\n`;
-    });
-  }
-
-  const clientName = customerInfo?.name?.trim() ? customerInfo.name.trim() : 'Non renseigné';
-  message += `- Nom du client : ${clientName}\n`;
-
-  if (customerInfo?.phone?.trim()) {
-    message += `- Contact / Téléphone : ${customerInfo.phone.trim()}\n`;
+    serviceName = cart.map((item) => `${item.service.name} (${item.quantity} ${item.service.unitLabel})`).join(' + ');
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    quantityText = `${totalQty} (${cart.length} prestations)`;
   }
 
   const detailsList: string[] = [];
+  if (customerInfo?.phone?.trim()) {
+    detailsList.push(`Tél: ${customerInfo.phone.trim()}`);
+  }
   if (customerInfo?.turnaroundOption) {
     detailsList.push(`Délai souhaité : ${customerInfo.turnaroundOption.label} (${customerInfo.turnaroundOption.hoursDetail})`);
   } else if (customerInfo?.urgency) {
     detailsList.push(`Délai : ${customerInfo.urgency}`);
   }
 
-  cart.forEach(item => {
+  cart.forEach((item) => {
     if (item.customNotes?.trim()) {
-      detailsList.push(`${item.service.name}: "${item.customNotes.trim()}"`);
+      detailsList.push(`${item.service.name} : "${item.customNotes.trim()}"`);
     }
   });
 
@@ -216,13 +219,17 @@ export function generateWhatsAppOrderLink(
     detailsList.push(customerInfo.notes.trim());
   }
 
-  const detailsText = detailsList.length > 0 ? detailsList.join(' | ') : 'Aucune instruction spécifique';
-  message += `- Détails / Instructions : ${detailsText}\n`;
-  message += `- Montant estimé : ${formatFCFA(totalAmount)}\n\n`;
-  message += `Je vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !`;
+  const instructions = detailsList.length > 0 ? detailsList.join(' | ') : 'Prestation standard';
 
-  const encoded = encodeURIComponent(message);
-  return `https://wa.me/2250141752403?text=${encoded}`;
+  const message = buildWhatsAppFormattedMessage({
+    serviceName,
+    quantityText,
+    customerName: customerInfo?.name,
+    instructions,
+    totalAmount
+  });
+
+  return `https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
 export function generateQuickServiceWhatsAppLink(
@@ -234,28 +241,24 @@ export function generateQuickServiceWhatsAppLink(
 ): string {
   const { totalPrice } = calculateServicePrice(service, quantity);
   
-  let message = `Bonjour OKBW Bureautique & Design !\n`;
-  message += `Je souhaite passer une commande :\n\n`;
-  message += `- Service : ${service.name}\n`;
-  message += `- Quantité / Pages : ${quantity} (${service.unitLabel})\n`;
-  
-  const clientName = customerName?.trim() ? customerName.trim() : 'Non renseigné';
-  message += `- Nom du client : ${clientName}\n`;
-
   const detailsParts: string[] = [];
   if (turnaround) {
-    detailsParts.push(`Délai : ${turnaround.label} (${turnaround.hoursDetail})`);
+    detailsParts.push(`Délai souhaité : ${turnaround.label} (${turnaround.hoursDetail})`);
   }
   if (customDetails?.trim()) {
     detailsParts.push(customDetails.trim());
   }
-  const detailsText = detailsParts.length > 0 ? detailsParts.join(' | ') : 'Prestation standard';
+  const instructions = detailsParts.length > 0 ? detailsParts.join(' | ') : 'Prestation standard';
 
-  message += `- Détails / Instructions : ${detailsText}\n`;
-  message += `- Montant estimé : ${formatFCFA(totalPrice)}\n\n`;
-  message += `Je vais vous joindre les fichiers à traiter directement ici dans notre discussion. Merci !`;
+  const message = buildWhatsAppFormattedMessage({
+    serviceName: service.name,
+    quantityText: `${quantity} (${service.unitLabel})`,
+    customerName,
+    instructions,
+    totalAmount: totalPrice
+  });
 
-  return `https://wa.me/2250141752403?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
 export function getServiceById(id: string): ServiceItem | undefined {

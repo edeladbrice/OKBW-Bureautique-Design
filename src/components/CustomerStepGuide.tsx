@@ -101,22 +101,22 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
     {
       stepNumber: "04",
       badge: "Étape 4",
-      title: "Réglez via Wave & Recevez vos livrables finaux",
-      shortDesc: "Payez en toute sécurité avec montant verrouillé, puis recevez vos documents finaux.",
+      title: "Réglez à la Livraison & Recevez vos livrables finaux",
+      shortDesc: "Validation sur aperçu, lien Wave transmis à la livraison et réception immédiate des fichiers HD.",
       details: [
-        "Lien Wave officiel avec montant pré-rempli et sécurisé : aucun calcul à faire, zéro risque d'erreur.",
-        "Livraison de vos fichiers en Haute Résolution (PDF prêt à imprimer/envoyer + fichiers modifiables Word, PSD, AI).",
-        "Retouches et ajustements offerts jusqu'à votre entière satisfaction."
+        "Réception d'un aperçu sécurisé de votre document sur WhatsApp pour validation avant tout paiement.",
+        "L'équipe OKBW vous transmet le lien de paiement officiel Wave / Mobile Money directement dans la discussion.",
+        "Livraison instantanée de vos fichiers en Haute Résolution (PDF prêt à imprimer + fichiers modifiables Word, PSD, AI) avec retouches incluses."
       ],
       icon: ShieldCheck,
       accentColor: "from-sky-600 to-blue-700",
       pillColor: "bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
-      ctaText: "En savoir plus sur Wave",
+      ctaText: "Découvrir la garantie livraison",
       ctaLink: "#paiement-wave",
-      previewTitle: "Paiement Verrouillé & Livraison",
+      previewTitle: "Paiement à la Livraison & Fichiers HD",
       previewBadge: "Étape 4/4",
       previewSnippet: {
-        wavePayment: "🔒 Montant Verrouillé : 500 FCFA (Zéro commission supplémentaire)",
+        wavePayment: "🔒 Lien de paiement sécurisé envoyé par OKBW après validation de l'aperçu",
         delivery: "📦 Livrables : CV_Final_HD.pdf + CV_Modifiable.docx",
         guarantee: "✅ Retouches gratuites sous 48h incluses"
       }
@@ -344,11 +344,11 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
                   <div className="space-y-3 text-xs">
                     <div className="p-3 bg-sky-50/80 dark:bg-sky-950/40 rounded-xl border border-sky-200 dark:border-sky-900/60 space-y-1.5">
                       <p className="font-bold text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
-                        <CreditCard className="w-4 h-4 text-sky-600" />
-                        Lien de Paiement Wave Officiel :
+                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        Aperçu & Lien Wave à la livraison :
                       </p>
-                      <p className="text-[11px] font-mono bg-white dark:bg-slate-900 p-2 rounded-lg border border-sky-100 dark:border-slate-700 text-[#0F52BA] dark:text-sky-400 font-bold truncate">
-                        https://pay.wave.com/.../?amount=500
+                      <p className="text-[11px] bg-white dark:bg-slate-900 p-2 rounded-lg border border-sky-100 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                        Aperçu validé sur WhatsApp ➡️ Lien Wave officiel reçu ➡️ Déblocage des fichiers HD.
                       </p>
                     </div>
                     <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
@@ -416,8 +416,8 @@ export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
               4
             </div>
             <div>
-              <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white">Paiement Wave Verrouillé</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Montant exact & Retouches incluses</p>
+              <p className="font-bold text-xs sm:text-sm text-slate-800 dark:text-white">Paiement à la Livraison</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Règlement à la fin du travail & Retouches incluses</p>
             </div>
           </div>
 

@@ -2,8 +2,9 @@ import { ServiceItem, ContactInfo } from '../types';
 
 export const CONTACT_INFO: ContactInfo = {
   whatsappNumber: '+225 01 41 75 24 03',
+  secondaryPhone: '+225 01 40 01 88 31',
+  displayContacts: '+225 01 41 75 24 03 / +225 01 40 01 88 31',
   whatsappUrl: 'https://wa.me/2250141752403',
-  wavePaymentUrl: 'https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/',
   email: 'contact@okbw-design.ci',
   location: 'Abidjan, Côte d\'Ivoire & Services à distance 24/7',
   hours: 'Lun - Sam : 08h00 - 20h00 | Urgences PDF & CV 7j/7'

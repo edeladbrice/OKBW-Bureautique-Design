@@ -52,23 +52,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminGuide }) => {
 
             <div className="pt-2 flex flex-wrap gap-2.5 items-center">
               <a
-                href={CONTACT_INFO.wavePaymentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-400/30 text-xs font-bold hover:bg-sky-500/30 transition-colors flex items-center space-x-1.5"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>Paiement Wave Business</span>
-              </a>
-
-              <a
                 href={CONTACT_INFO.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3.5 py-2 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-600/30 transition-colors flex items-center space-x-1.5"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                <span>WhatsApp 24/7</span>
+                <span>WhatsApp ({CONTACT_INFO.whatsappNumber})</span>
               </a>
 
               {onOpenAdminGuide && (
@@ -165,7 +155,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminGuide }) => {
             <div className="space-y-2.5 text-slate-400">
               <div className="flex items-start space-x-2">
                 <MessageSquare className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-slate-200 font-bold">{CONTACT_INFO.whatsappNumber}</span>
+                <div>
+                  <span className="text-slate-200 font-bold block">{CONTACT_INFO.whatsappNumber}</span>
+                  <span className="text-[10px] text-slate-400 block">{CONTACT_INFO.secondaryPhone || '+225 01 40 01 88 31'}</span>
+                </div>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="w-4 h-4 text-[#FF5E14] flex-shrink-0 mt-0.5" />
@@ -197,7 +190,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminGuide }) => {
               <span>Qualité & Confidentialité Certifiées</span>
             </span>
             <span>•</span>
-            <span className="text-sky-400">Passerelle Wave Business</span>
+            <span className="text-emerald-400">Commandes & Fichiers via WhatsApp</span>
           </div>
         </div>
 

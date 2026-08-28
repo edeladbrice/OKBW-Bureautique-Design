@@ -363,16 +363,16 @@ export const Hero: React.FC<HeroProps> = ({
 
             <div className="space-y-2.5">
               <a 
-                href={CONTACT_INFO.wavePaymentUrl} 
+                href={`https://wa.me/2250141752403?text=${encodeURIComponent("Bonjour OKBW Bureautique & Design !\nJe souhaite échanger à propos d'un projet Web (Site vitrine / Boutique / Application).")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#0F52BA] hover:brightness-110 w-full py-3 rounded-2xl flex items-center justify-center space-x-2 font-bold text-xs shadow-md transition-all"
+                className="bg-[#0F52BA] hover:brightness-110 w-full py-3 rounded-2xl flex items-center justify-center space-x-2 font-bold text-xs shadow-md transition-all text-white"
               >
-                <CreditCard className="w-3.5 h-3.5 text-white" />
-                <span>Paiement Wave Direct</span>
+                <MessageSquare className="w-3.5 h-3.5 text-white" />
+                <span>Discuter du projet sur WhatsApp</span>
               </a>
               <div className="text-[10px] text-center opacity-80 italic">
-                Validation & Reçu instantanés
+                Réponse instantanée & devis sur mesure
               </div>
             </div>
           </div>
