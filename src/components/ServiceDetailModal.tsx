@@ -12,11 +12,14 @@ import {
   FileCheck2,
   AlertCircle,
   User,
+  Phone,
   FileText,
   SendHorizontal,
   Lock,
   Receipt,
-  Scale
+  Scale,
+  Download,
+  QrCode
 } from 'lucide-react';
 import { ServiceItem, TurnaroundOption } from '../types';
 import { 
@@ -26,8 +29,10 @@ import {
   buildWhatsAppFormattedMessage,
   TURNAROUND_OPTIONS,
   ADMINISTRATIVE_LOCKED_TURNAROUND,
-  isAdministrativeService
+  isAdministrativeService,
+  generateOrderReference
 } from '../utils/pricing';
+import { downloadProformaPDF } from '../utils/pdfInvoiceGenerator';
 import { TurnaroundSelector } from './TurnaroundSelector';
 
 interface ServiceDetailModalProps {
@@ -40,12 +45,14 @@ interface ServiceDetailModalProps {
     customerName?: string,
     turnaroundId?: string
   ) => void;
+  onOpenWaveQr?: (amount: number, title: string) => void;
 }
 
 export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   service,
   onClose,
-  onAddToCart
+  onAddToCart,
+  onOpenWaveQr
 }) => {
   if (!service) return null;
 
@@ -53,6 +60,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
 
   const [quantity, setQuantity] = useState<number>(1);
   const [customerName, setCustomerName] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('');
   const [customNotes, setCustomNotes] = useState<string>('');
   const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption>(() => {
     if (isAdministrative) {
@@ -88,10 +96,34 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
     }, 700);
   };
 
+  const handleDownloadProforma = () => {
+    const ref = generateOrderReference();
+    downloadProformaPDF({
+      orderReference: ref,
+      date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      customerName: customerName.trim() || 'Client',
+      customerPhone: customerPhone.trim() || '',
+      items: [
+        {
+          name: service.name,
+          quantity,
+          unitLabel: service.unitLabel,
+          unitPrice,
+          totalPrice,
+          notes: customNotes.trim()
+        }
+      ],
+      totalAmount: totalPrice,
+      turnaround: `${selectedTurnaround.label} (${selectedTurnaround.hoursDetail})`,
+      isAdministrative
+    });
+  };
+
   const whatsappRedirectUrl = generateQuickServiceWhatsAppLink(
     service,
     quantity,
     customerName,
+    customerPhone,
     customNotes,
     selectedTurnaround
   );
@@ -314,18 +346,37 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               </span>
             </div>
 
-            {/* Customer Name field */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                {isAdministrative ? "Nom & Prénoms du demandeur (selon pièce d'identité)" : "Nom & Prénoms du client"} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder={isAdministrative ? "Ex: M. KOUAME Yao Serge" : "Ex: M. Kouadio Jean-Marc"}
-                className="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#0F52BA] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium transition-colors"
-              />
+            {/* Customer Details Form */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  {isAdministrative ? "Nom & Prénoms du demandeur" : "Nom & Prénoms du client"} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={isAdministrative ? "Ex: M. KOUAME Yao Serge" : "Ex: M. Kouadio Jean-Marc"}
+                  className="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#0F52BA] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <span>Numéro WhatsApp du client</span>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Pour la réponse directe</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="+225 07 00 00 00 00"
+                    className="w-full pl-9 pr-3 py-3 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-[#0F52BA] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium transition-colors"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Instructions / Details field */}
@@ -342,12 +393,35 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               />
             </div>
 
+            {/* Quick Tools Row: Proforma PDF Download & Wave QR Code */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200 dark:border-slate-700/80">
+              <button
+                type="button"
+                onClick={handleDownloadProforma}
+                className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors flex items-center space-x-1.5"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Télécharger Devis PDF</span>
+              </button>
+
+              {onOpenWaveQr && (
+                <button
+                  type="button"
+                  onClick={() => onOpenWaveQr(totalPrice, service.name)}
+                  className="py-2 px-3 rounded-xl bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 text-sky-800 dark:text-sky-300 font-bold text-xs border border-sky-200 dark:border-sky-800 transition-colors flex items-center space-x-1.5"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Afficher QR Code Wave</span>
+                </button>
+              )}
+            </div>
+
             {/* LIVE PREVIEW OF THE EXACT WHATSAPP MESSAGE */}
             <div className="space-y-2 pt-1">
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
                 <span className="flex items-center space-x-1.5">
                   <SendHorizontal className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Aperçu en direct du message WhatsApp :</span>
+                  <span>Aperçu en direct du message WhatsApp généré :</span>
                 </span>
                 <span className="text-emerald-600 dark:text-emerald-400 text-[10px] bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
                   Prêt à envoyer
@@ -357,24 +431,27 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
               <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-emerald-300/80 dark:border-emerald-800/80 text-slate-900 dark:text-slate-100 font-sans text-xs space-y-1.5 shadow-inner">
                 <p className="font-bold text-emerald-700 dark:text-emerald-400">Bonjour OKBW Bureautique & Design !</p>
                 <p className="text-slate-600 dark:text-slate-300">
-                  {isAdministrative ? "Je souhaite effectuer une démarche administrative / judiciaire :" : "Je souhaite passer une commande :"}
+                  Voici le récapitulatif de ma commande via le Bot du site :
                 </p>
                 
                 <div className="pl-2 border-l-2 border-emerald-500/50 space-y-1 py-1 text-slate-800 dark:text-slate-200">
-                  <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Acte demandé :" : "• Service :"}</strong> {service.name}</p>
-                  <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Quantité / Dossiers :" : "• Quantité / Pages :"}</strong> {quantity} ({service.unitLabel})</p>
-                  <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Nom du demandeur :" : "• Nom du client :"}</strong> <span className={customerName.trim() ? "text-blue-600 dark:text-blue-400 font-semibold" : "italic text-slate-400 dark:text-slate-500"}>{customerName.trim() || 'Non renseigné'}</span></p>
+                  <p><strong className="text-slate-900 dark:text-white">• Service :</strong> {service.name}</p>
+                  <p><strong className="text-slate-900 dark:text-white">• Quantité / Pages :</strong> {quantity} ({service.unitLabel})</p>
+                  <p><strong className="text-slate-900 dark:text-white">• Nom du client :</strong> <span className={customerName.trim() ? "text-blue-600 dark:text-blue-400 font-semibold" : "italic text-slate-400 dark:text-slate-500"}>{customerName.trim() || 'Non renseigné'}</span></p>
+                  {customerPhone.trim() && (
+                    <p><strong className="text-slate-900 dark:text-white">• Contact client :</strong> <span className="text-emerald-600 font-semibold">{customerPhone.trim()}</span></p>
+                  )}
                   <p><strong className="text-slate-900 dark:text-white">• Instructions :</strong> {customNotes.trim() ? customNotes.trim() : 'Prestation standard'}</p>
-                  <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Montant total :" : "• Montant à régler :"}</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalPrice)}</span></p>
-                  <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold truncate"><strong className="text-slate-900 dark:text-white">• Lien Wave :</strong> https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/</p>
+                  <p><strong className="text-slate-900 dark:text-white">{isAdministrative ? "• Montant total :" : "• Montant à régler à la livraison :"}</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalPrice)}</span></p>
+                  <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold truncate"><strong className="text-slate-900 dark:text-white">• Lien de paiement Wave officiel :</strong> https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/</p>
                 </div>
 
                 {isAdministrative ? (
                   <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-[11px] text-orange-950 dark:text-orange-200 space-y-1 border border-orange-200 dark:border-orange-800">
-                    <p className="font-bold text-orange-900 dark:text-orange-300">⚖️ Rappel des conditions & Délais officiels :</p>
-                    <p>1. Paiement obligatoire pour engager la demande et régler les timbres fiscaux & greffe.</p>
-                    <p>2. Reçu officiel de demande et transaction transmis <strong>IMMÉDIATEMENT</strong> dès confirmation du paiement.</p>
-                    <p>3. Retrait et délivrance du document officiel sous <strong>72h (3 jours ouvrés)</strong>.</p>
+                    <p className="font-bold text-orange-900 dark:text-orange-300">⚖️ Modalités & Délais officiels :</p>
+                    <p>• Règlement à l'enregistrement (Timbres fiscaux & greffe).</p>
+                    <p>• Reçu officiel immédiat dès paiement.</p>
+                    <p>• Retrait physique sous 72h ouvrées.</p>
                   </div>
                 ) : (
                   <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">

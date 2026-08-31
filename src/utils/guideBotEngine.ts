@@ -357,11 +357,11 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
   }
 
   // 4. PAYMENT / WAVE / SECURITY QUESTIONS
-  if (norm.includes('payer') || norm.includes('paiement') || norm.includes('wave') || norm.includes('orange') || norm.includes('mtn') || norm.includes('moov') || norm.includes('reglement') || norm.includes('livraison')) {
+  if (norm.includes('payer') || norm.includes('paiement') || norm.includes('wave') || norm.includes('reglement') || norm.includes('livraison')) {
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `💳 Modalités de Paiement & Sécurité :\n\n✅ Bureautique, Design, PDF & Web :\n• Règlement à la livraison sans aucun risque !\n• Vous recevez un aperçu sécurisé de votre document pour validation.\n• Vous réglez ensuite en 1 clic via le lien officiel Wave Business ou Mobile Money pour recevoir vos fichiers HD.\n\n⚖️ Actes Judiciaires & Inscriptions Publiques :\n• Règlement à l'enregistrement requis pour acquitter les timbres fiscaux d'État et droits ministériels.\n• Reçu officiel immédiat dès confirmation du règlement.\n• Retrait physique du document sous 72h (3 jours).`,
+      text: `💳 Modalités de Paiement 100% Sécurisé Wave Business CI :\n\n✅ Bureautique, Design, PDF & Web :\n• Règlement à la livraison sans aucun risque !\n• Vous recevez un aperçu sécurisé de votre document pour validation.\n• Vous réglez ensuite en 1 clic via le lien officiel Wave Business CI pour recevoir vos fichiers finaux HD.\n\n⚖️ Actes Judiciaires & Inscriptions Publiques :\n• Règlement à l'enregistrement requis pour acquitter les timbres fiscaux d'État et droits de greffe.\n• Reçu officiel immédiat dès confirmation du règlement Wave.\n• Retrait physique du document authentifié sous 72h (3 jours).`,
       timestamp: now,
       quickReplies: INITIAL_POLE_REPLIES
     };

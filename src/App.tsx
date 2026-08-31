@@ -14,6 +14,11 @@ import { FloatingContact } from './components/FloatingContact';
 import { Footer } from './components/Footer';
 import { AdminGuideModal } from './components/AdminGuideModal';
 import { SmartGuideBot } from './components/SmartGuideBot';
+import { WaveQrModal } from './components/WaveQrModal';
+import { OrderTrackerModal } from './components/OrderTrackerModal';
+import { AdministrativeSimulatorModal } from './components/AdministrativeSimulatorModal';
+import { PdfToolsModal } from './components/PdfToolsModal';
+import { ProformaModal } from './components/ProformaModal';
 import { CartItem, ServiceItem, UploadedFile } from './types';
 import { calculateServicePrice } from './utils/pricing';
 
@@ -43,6 +48,51 @@ export default function App() {
   const [isBotOpen, setIsBotOpen] = useState(false);
   const [botInitialTopic, setBotInitialTopic] = useState<string | undefined>(undefined);
   const [selectedServiceForModal, setSelectedServiceForModal] = useState<ServiceItem | null>(null);
+
+  // New Interactive Workstation Modals
+  const [waveQrData, setWaveQrData] = useState<{ isOpen: boolean; amount: number; serviceTitle: string }>({
+    isOpen: false,
+    amount: 500,
+    serviceTitle: 'Prestation OKBW'
+  });
+  const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState(false);
+  const [isAdminSimulatorOpen, setIsAdminSimulatorOpen] = useState(false);
+  const [isPdfToolsOpen, setIsPdfToolsOpen] = useState(false);
+  const [proformaData, setProformaData] = useState<{
+    isOpen: boolean;
+    orderReference: string;
+    date: string;
+    customerName: string;
+    customerPhone: string;
+    items: Array<{
+      name: string;
+      quantity: number;
+      unitLabel: string;
+      unitPrice: number;
+      totalPrice: number;
+      notes?: string;
+    }>;
+    totalAmount: number;
+    turnaround: string;
+    isAdministrative?: boolean;
+  }>({
+    isOpen: false,
+    orderReference: '',
+    date: '',
+    customerName: '',
+    customerPhone: '',
+    items: [],
+    totalAmount: 0,
+    turnaround: 'Standard'
+  });
+
+  const handleOpenWaveQr = (amount: number, serviceTitle: string) => {
+    setWaveQrData({
+      isOpen: true,
+      amount,
+      serviceTitle
+    });
+  };
 
   const handleOpenGuideBot = (topic?: string) => {
     setBotInitialTopic(topic);
@@ -254,6 +304,10 @@ export default function App() {
           setIsBotOpen(false);
           scrollToCatalog();
         }}
+        onOpenWaveQr={handleOpenWaveQr}
+        onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+        onOpenAdminSimulator={() => setIsAdminSimulatorOpen(true)}
+        onOpenPdfTools={() => setIsPdfToolsOpen(true)}
       />
 
       {/* Service Detail & Custom Order Modal */}
@@ -261,6 +315,7 @@ export default function App() {
         service={selectedServiceForModal}
         onClose={() => setSelectedServiceForModal(null)}
         onAddToCart={handleAddToCart}
+        onOpenWaveQr={handleOpenWaveQr}
       />
 
       {/* Interactive Price Calculator Simulator Modal */}
@@ -268,6 +323,7 @@ export default function App() {
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
         onAddToCart={(service, qty) => handleAddToCart(service, qty)}
+        onOpenWaveQr={handleOpenWaveQr}
       />
 
       {/* Shopping Cart Drawer */}
@@ -279,12 +335,61 @@ export default function App() {
         onRemoveItem={handleRemoveFromCart}
         onClearCart={handleClearCart}
         onExploreCatalog={scrollToCatalog}
+        onOpenWaveQr={handleOpenWaveQr}
       />
 
       {/* Owner / Admin Guide & Live Activity Monitor Modal */}
       <AdminGuideModal
         isOpen={isAdminGuideOpen}
         onClose={() => setIsAdminGuideOpen(false)}
+      />
+
+      {/* Direct Wave QR Code Modal */}
+      <WaveQrModal
+        isOpen={waveQrData.isOpen}
+        onClose={() => setWaveQrData(prev => ({ ...prev, isOpen: false }))}
+        amount={waveQrData.amount}
+        serviceTitle={waveQrData.serviceTitle}
+      />
+
+      {/* Local Order Tracker Modal */}
+      <OrderTrackerModal
+        isOpen={isOrderTrackerOpen}
+        onClose={() => setIsOrderTrackerOpen(false)}
+      />
+
+      {/* Administrative Official Procedures Simulator */}
+      <AdministrativeSimulatorModal
+        isOpen={isAdminSimulatorOpen}
+        onClose={() => setIsAdminSimulatorOpen(false)}
+        onSelectService={(service) => {
+          setIsAdminSimulatorOpen(false);
+          setSelectedServiceForModal(service);
+        }}
+      />
+
+      {/* PDF Toolset Modal (Image-to-PDF, Page Counter) */}
+      <PdfToolsModal
+        isOpen={isPdfToolsOpen}
+        onClose={() => setIsPdfToolsOpen(false)}
+        onSelectService={(service) => {
+          setIsPdfToolsOpen(false);
+          setSelectedServiceForModal(service);
+        }}
+      />
+
+      {/* Proforma Invoice Viewer Modal */}
+      <ProformaModal
+        isOpen={proformaData.isOpen}
+        onClose={() => setProformaData(prev => ({ ...prev, isOpen: false }))}
+        orderReference={proformaData.orderReference}
+        date={proformaData.date}
+        customerName={proformaData.customerName}
+        customerPhone={proformaData.customerPhone}
+        items={proformaData.items}
+        totalAmount={proformaData.totalAmount}
+        turnaround={proformaData.turnaround}
+        isAdministrative={proformaData.isAdministrative}
       />
 
       {/* Floating WhatsApp, Cart, Guide Bot and Quick Guide buttons */}

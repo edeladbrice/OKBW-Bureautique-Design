@@ -84,36 +84,118 @@ export const ADMINISTRATIVE_LOCKED_TURNAROUND: TurnaroundOption = {
   recommended: true
 };
 
+export function generateOrderReference(): string {
+  const randomCode = Math.floor(1000 + Math.random() * 9000);
+  const year = new Date().getFullYear();
+  return `OKBW-${year}-${randomCode}`;
+}
+
+export interface StoredOrderRecord {
+  id: string;
+  orderReference: string;
+  date: string;
+  customerName: string;
+  customerPhone: string;
+  serviceName: string;
+  quantityText: string;
+  totalAmount: number;
+  instructions: string;
+  status: 'recu' | 'conception' | 'apercu_pret' | 'regle_livre';
+  wavePaymentUrl: string;
+  isAdministrative?: boolean;
+}
+
+export function saveOrderToHistory(order: Omit<StoredOrderRecord, 'id'>): StoredOrderRecord {
+  const fullOrder: StoredOrderRecord = {
+    ...order,
+    id: `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+  };
+
+  try {
+    const existing = localStorage.getItem('okbw_orders_history');
+    const list: StoredOrderRecord[] = existing ? JSON.parse(existing) : [];
+    list.unshift(fullOrder);
+    // Keep last 50 orders
+    localStorage.setItem('okbw_orders_history', JSON.stringify(list.slice(0, 50)));
+  } catch (e) {
+    console.error('Error saving order history', e);
+  }
+
+  return fullOrder;
+}
+
+export function getStoredOrders(): StoredOrderRecord[] {
+  try {
+    const existing = localStorage.getItem('okbw_orders_history');
+    return existing ? JSON.parse(existing) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function updateStoredOrderStatus(orderReference: string, status: StoredOrderRecord['status']) {
+  try {
+    const list = getStoredOrders();
+    const updated = list.map(item => item.orderReference === orderReference ? { ...item, status } : item);
+    localStorage.setItem('okbw_orders_history', JSON.stringify(updated));
+  } catch (e) {
+    console.error('Error updating order status', e);
+  }
+}
+
 export function buildWhatsAppFormattedMessage(params: {
   serviceName: string;
   quantityText: string;
   customerName?: string;
+  customerPhone?: string;
   instructions?: string;
   totalAmount: number;
   isAdministrative?: boolean;
+  orderReference?: string;
 }): string {
+  const ref = params.orderReference || generateOrderReference();
   const name = params.customerName?.trim() ? params.customerName.trim() : 'Non renseigné';
+  const phone = params.customerPhone?.trim() ? params.customerPhone.trim() : 'Non renseigné';
   const instructions = params.instructions?.trim() ? params.instructions.trim() : 'Prestation standard';
   const wavePaymentLink = getWavePaymentUrl(params.totalAmount);
 
   let message = `Bonjour OKBW Bureautique & Design !\n`;
   message += `Voici le récapitulatif de ma commande via le Bot du site :\n\n`;
+  message += `• Réf. Commande : ${ref}\n`;
   message += `• Service : ${params.serviceName}\n`;
   message += `• Quantité / Pages : ${params.quantityText}\n`;
   message += `• Nom du client : ${name}\n`;
+  if (phone && phone !== 'Non renseigné') {
+    message += `• Contact WhatsApp client : ${phone}\n`;
+  }
   message += `• Instructions : ${instructions}\n`;
   
   if (params.isAdministrative) {
     message += `• Montant total : ${formatFCFA(params.totalAmount)}\n`;
     message += `• Modalité : Règlement à l'enregistrement (Timbres fiscaux & greffe) • Reçu officiel immédiat dès paiement • Retrait physique sous 72h\n`;
-    message += `• Lien de paiement sécurisé Wave : ${wavePaymentLink}\n\n`;
+    message += `• Lien de paiement Wave officiel : ${wavePaymentLink}\n\n`;
     message += `Je vous joins les photos/scans de mes pièces justificatives ci-dessous dans cette discussion.`;
   } else {
     message += `• Montant à régler à la livraison : ${formatFCFA(params.totalAmount)}\n`;
-    message += `• Lien de paiement sécurisé Wave : ${wavePaymentLink}\n\n`;
+    message += `• Lien de paiement Wave officiel : ${wavePaymentLink}\n\n`;
     message += `Je vous joins mes fichiers ci-dessous dans cette discussion.\n`;
     message += `(Règlement via le lien Wave ci-dessus dès validation de l'aperçu).`;
   }
+
+  // Also auto-save to local order history
+  saveOrderToHistory({
+    orderReference: ref,
+    date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    customerName: name,
+    customerPhone: phone,
+    serviceName: params.serviceName,
+    quantityText: params.quantityText,
+    totalAmount: params.totalAmount,
+    instructions,
+    status: 'recu',
+    wavePaymentUrl: wavePaymentLink,
+    isAdministrative: params.isAdministrative
+  });
 
   return message;
 }
@@ -270,6 +352,7 @@ export function generateWhatsAppOrderLink(
     serviceName,
     quantityText,
     customerName: customerInfo?.name,
+    customerPhone: customerInfo?.phone,
     instructions,
     totalAmount,
     isAdministrative
@@ -282,6 +365,7 @@ export function generateQuickServiceWhatsAppLink(
   service: ServiceItem, 
   quantity: number = 1,
   customerName?: string,
+  customerPhone?: string,
   customDetails?: string,
   turnaround?: TurnaroundOption
 ): string {
@@ -301,6 +385,7 @@ export function generateQuickServiceWhatsAppLink(
     serviceName: service.name,
     quantityText: `${quantity} (${service.unitLabel})`,
     customerName,
+    customerPhone,
     instructions,
     totalAmount: totalPrice,
     isAdministrative

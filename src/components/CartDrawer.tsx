@@ -19,7 +19,9 @@ import {
   Check, 
   SendHorizontal,
   Scale,
-  Lock
+  Lock,
+  Download,
+  QrCode
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CartItem, TurnaroundOption } from '../types';
@@ -30,8 +32,10 @@ import {
   TURNAROUND_OPTIONS,
   ADMINISTRATIVE_LOCKED_TURNAROUND,
   hasAdministrativeService,
-  getWavePaymentUrl
+  getWavePaymentUrl,
+  generateOrderReference
 } from '../utils/pricing';
+import { downloadProformaPDF } from '../utils/pdfInvoiceGenerator';
 import { TurnaroundSelector } from './TurnaroundSelector';
 
 interface CartDrawerProps {
@@ -42,6 +46,7 @@ interface CartDrawerProps {
   onRemoveItem: (index: number) => void;
   onClearCart: () => void;
   onExploreCatalog: () => void;
+  onOpenWaveQr?: (amount: number, title: string) => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -51,7 +56,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
-  onExploreCatalog
+  onExploreCatalog,
+  onOpenWaveQr
 }) => {
   if (!isOpen) return null;
 
@@ -74,6 +80,27 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   }, [hasAdmin]);
 
   const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  const handleDownloadProforma = () => {
+    const ref = generateOrderReference();
+    downloadProformaPDF({
+      orderReference: ref,
+      date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      customerName: customerName.trim() || 'Client',
+      customerPhone: customerPhone.trim() || '',
+      items: cart.map(item => ({
+        name: item.service.name,
+        quantity: item.quantity,
+        unitLabel: item.service.unitLabel,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        notes: item.customNotes
+      })),
+      totalAmount,
+      turnaround: hasAdmin ? '72h ouvrées (3 jours)' : `${selectedTurnaround.label} (${selectedTurnaround.hoursDetail})`,
+      isAdministrative: hasAdmin
+    });
+  };
 
   const handleWhatsAppCheckout = () => {
     try {
@@ -319,6 +346,29 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       />
                     </div>
 
+                    {/* Quick Tools Row: Proforma PDF Download & Wave QR Code */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-700/80">
+                      <button
+                        type="button"
+                        onClick={handleDownloadProforma}
+                        className="py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors flex items-center space-x-1.5"
+                      >
+                        <Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>Télécharger Devis Proforma PDF</span>
+                      </button>
+
+                      {onOpenWaveQr && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenWaveQr(totalAmount, serviceSummaryText)}
+                          className="py-2 px-3 rounded-xl bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 text-sky-800 dark:text-sky-300 font-bold text-xs border border-sky-200 dark:border-sky-800 transition-colors flex items-center space-x-1.5"
+                        >
+                          <QrCode className="w-3.5 h-3.5 text-sky-600" />
+                          <span>QR Code Wave</span>
+                        </button>
+                      )}
+                    </div>
+
                     {/* LIVE PREVIEW OF THE EXACT WHATSAPP ORDER */}
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -333,21 +383,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                       <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-emerald-300/80 dark:border-emerald-800/80 text-slate-900 dark:text-slate-100 font-sans text-xs space-y-1.5 shadow-inner">
                         <p className="font-bold text-emerald-700 dark:text-emerald-400">Bonjour OKBW Bureautique & Design !</p>
-                        <p className="text-slate-600 dark:text-slate-300">Je souhaite passer une commande :</p>
+                        <p className="text-slate-600 dark:text-slate-300">Voici le récapitulatif de ma commande via le Bot du site :</p>
                         
                         <div className="pl-2 border-l-2 border-emerald-500/50 space-y-1 py-1 text-slate-800 dark:text-slate-200">
                           <p><strong className="text-slate-900 dark:text-white">• Service :</strong> {serviceSummaryText}</p>
                           <p><strong className="text-slate-900 dark:text-white">• Quantité / Pages :</strong> {totalQtyText}</p>
                           <p><strong className="text-slate-900 dark:text-white">• Nom du client :</strong> <span className={customerName.trim() ? "text-blue-600 dark:text-blue-400 font-semibold" : "italic text-slate-400 dark:text-slate-500"}>{customerName.trim() || 'Non renseigné'}</span></p>
+                          {customerPhone.trim() && (
+                            <p><strong className="text-slate-900 dark:text-white">• Contact client :</strong> <span className="text-emerald-600 font-semibold">{customerPhone.trim()}</span></p>
+                          )}
                           <p><strong className="text-slate-900 dark:text-white">• Instructions :</strong> {instructionsSummary}</p>
-                          <p><strong className="text-slate-900 dark:text-white">{hasAdmin ? "• Montant total :" : "• Montant à régler :"}</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalAmount)}</span></p>
-                          <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold truncate"><strong className="text-slate-900 dark:text-white">• Lien Wave :</strong> https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/</p>
+                          <p><strong className="text-slate-900 dark:text-white">{hasAdmin ? "• Montant total :" : "• Montant à régler à la livraison :"}</strong> <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{formatFCFA(totalAmount)}</span></p>
+                          <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold truncate"><strong className="text-slate-900 dark:text-white">• Lien de paiement Wave officiel :</strong> https://pay.wave.com/m/M_ci_xSfaNea0jdqH/c/ci/</p>
                         </div>
 
                         {hasAdmin ? (
                           <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-[11px] text-orange-950 dark:text-orange-200 space-y-0.5 border border-orange-200 dark:border-orange-800">
                             <p className="font-bold text-orange-900 dark:text-orange-300">⚖️ Rappel démarches administratives :</p>
-                            <p>Paiement obligatoire pour engager la demande • Reçu officiel de demande et transaction immédiat • Retrait physique du document sous 72h (3 jours).</p>
+                            <p>Paiement obligatoire pour engager la demande • Reçu officiel immédiat • Retrait physique sous 72h (3 jours).</p>
                           </div>
                         ) : (
                           <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">

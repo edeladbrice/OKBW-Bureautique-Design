@@ -32,7 +32,10 @@ import {
   School,
   CreditCard,
   Check,
-  Edit3
+  Edit3,
+  Download,
+  QrCode,
+  Package
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ServiceItem, TurnaroundOption } from '../types';
@@ -45,8 +48,10 @@ import {
   isAdministrativeService,
   buildWhatsAppFormattedMessage,
   PRIMARY_WHATSAPP_NUMBER,
-  getWavePaymentUrl
+  getWavePaymentUrl,
+  generateOrderReference
 } from '../utils/pricing';
+import { downloadProformaPDF } from '../utils/pdfInvoiceGenerator';
 import { 
   BotMessage, 
   BotQuickReply, 
@@ -68,6 +73,10 @@ interface SmartGuideBotProps {
   onScrollToCatalog: () => void;
   initialQuery?: string;
   initialTopic?: string;
+  onOpenWaveQr?: (amount: number, title: string) => void;
+  onOpenOrderTracker?: () => void;
+  onOpenAdminSimulator?: () => void;
+  onOpenPdfTools?: () => void;
 }
 
 interface TreeState {
@@ -91,7 +100,11 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
   onAddToCart,
   onScrollToCatalog,
   initialQuery,
-  initialTopic
+  initialTopic,
+  onOpenWaveQr,
+  onOpenOrderTracker,
+  onOpenAdminSimulator,
+  onOpenPdfTools
 }) => {
   const [messages, setMessages] = useState<BotMessage[]>([GREETING_MESSAGE]);
   const [inputText, setInputText] = useState('');
@@ -818,7 +831,7 @@ Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et
                       </div>
                     </div>
 
-                    {/* Action Buttons: WhatsApp & Direct Wave */}
+                    {/* Action Buttons: WhatsApp & Direct Wave & Proforma PDF */}
                     <div className="mt-4 pt-2 space-y-2">
                       <a
                         id="btn-whatsapp-order-confirm"
@@ -832,20 +845,60 @@ Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et
                         <ArrowRight className="w-4 h-4 ml-1" />
                       </a>
 
-                      <a
-                        id="btn-wave-order-confirm"
-                        href={getWavePaymentUrl(msg.widgetData.totalPrice)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-semibold text-xs shadow-sm transition-all"
-                      >
-                        <Sparkles className="w-4 h-4 text-sky-200" />
-                        <span>Payer directement via Wave ({formatFCFA(msg.widgetData.totalPrice)})</span>
-                        <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
-                      </a>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ref = generateOrderReference();
+                            downloadProformaPDF({
+                              orderReference: ref,
+                              date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                              customerName: msg.widgetData.customerName || 'Client',
+                              customerPhone: '',
+                              items: [
+                                {
+                                  name: msg.widgetData.service?.name || 'Prestation OKBW',
+                                  quantity: msg.widgetData.quantity || 1,
+                                  unitLabel: msg.widgetData.service?.unitLabel || 'unité',
+                                  unitPrice: (msg.widgetData.totalPrice || 0) / (msg.widgetData.quantity || 1),
+                                  totalPrice: msg.widgetData.totalPrice || 0,
+                                  notes: msg.widgetData.instructions
+                                }
+                              ],
+                              totalAmount: msg.widgetData.totalPrice || 0,
+                              turnaround: 'Standard Rapide'
+                            });
+                          }}
+                          className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5"
+                        >
+                          <Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                          <span>Devis PDF Proforma</span>
+                        </button>
+
+                        {onOpenWaveQr ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenWaveQr(msg.widgetData.totalPrice, msg.widgetData.service?.name || 'Prestation OKBW')}
+                            className="py-2.5 px-3 rounded-xl bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 text-sky-800 dark:text-sky-300 font-bold text-xs border border-sky-200 dark:border-sky-800 transition-colors flex items-center justify-center space-x-1.5"
+                          >
+                            <QrCode className="w-3.5 h-3.5 text-sky-600" />
+                            <span>QR Code Wave</span>
+                          </button>
+                        ) : (
+                          <a
+                            href={getWavePaymentUrl(msg.widgetData.totalPrice)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs transition-all flex items-center justify-center space-x-1.5"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-sky-200" />
+                            <span>Lien Wave</span>
+                          </a>
+                        )}
+                      </div>
 
                       <p className="mt-1.5 text-center text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-                        📱 Votre message WhatsApp inclut automatiquement le récapitulatif complet et votre lien de paiement Wave.
+                        📱 Votre message WhatsApp inclut automatiquement le récapitulatif complet et le lien de paiement officiel Wave.
                       </p>
                     </div>
                   </div>
@@ -927,7 +980,7 @@ Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et
           {/* Quick Helper Subtext */}
           <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1">
             <span>Direct WhatsApp : <strong>{CONTACT_INFO.whatsappNumber}</strong></span>
-            <span>Règlement sécurisé Wave & Mobile Money</span>
+            <span>Règlement sécurisé Wave Business CI</span>
           </div>
         </div>
       </div>
