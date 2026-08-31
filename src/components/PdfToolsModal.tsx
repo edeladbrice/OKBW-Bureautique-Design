@@ -9,19 +9,34 @@ import {
   Sparkles, 
   Layers, 
   RefreshCw,
-  FileCheck
+  FileCheck,
+  MessageSquare,
+  ExternalLink,
+  ShieldCheck
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import { PRIMARY_WHATSAPP_NUMBER } from '../utils/pricing';
+import { 
+  PRIMARY_WHATSAPP_NUMBER, 
+  WAVE_PAYMENT_URL, 
+  generateOrderReference,
+  saveOrderToHistory,
+  StoredOrderRecord,
+  getWavePaymentUrl,
+  formatFCFA
+} from '../utils/pricing';
 
 interface PdfToolsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectService?: (service: any) => void;
+  onOrderSuccess?: (order: StoredOrderRecord) => void;
 }
 
 export const PdfToolsModal: React.FC<PdfToolsModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  onSelectService,
+  onOrderSuccess
 }) => {
   const [activeTab, setActiveTab] = useState<'imgToPdf' | 'pageCounter'>('imgToPdf');
   
@@ -244,23 +259,35 @@ export const PdfToolsModal: React.FC<PdfToolsModalProps> = ({
 
               {/* Action Button */}
               {selectedImages.length > 0 && (
-                <button
-                  onClick={generateMergedPdf}
-                  disabled={isGenerating}
-                  className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center space-x-2"
-                >
-                  {isGenerating ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Génération du PDF en cours...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      <span>Télécharger le PDF Assemblé ({selectedImages.length} pages)</span>
-                    </>
-                  )}
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={generateMergedPdf}
+                    disabled={isGenerating}
+                    className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center space-x-2"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Génération du PDF en cours...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        <span>Télécharger le PDF Assemblé ({selectedImages.length} pages)</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={`https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour OKBW ! J'ai assemblé mes photos en 1 fichier PDF (${selectedImages.length} pages) sur votre site et je souhaite vous le transmettre pour impression / mise en page.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center space-x-1.5"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Envoyer ce PDF sur WhatsApp (+225 01 41 75 24 03)</span>
+                  </a>
+                </div>
               )}
             </div>
           )}
@@ -303,6 +330,49 @@ export const PdfToolsModal: React.FC<PdfToolsModalProps> = ({
                     <strong className="text-base font-black text-emerald-600 font-['Outfit']">
                       {estimatedPrice.toLocaleString('fr-FR')} FCFA
                     </strong>
+                  </div>
+
+                  <div className="pt-2 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ref = generateOrderReference();
+                        const now = new Date();
+                        const formattedDate = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                        
+                        const record = saveOrderToHistory({
+                          orderReference: ref,
+                          date: formattedDate,
+                          customerName: 'Client',
+                          customerPhone: '',
+                          serviceName: `Saisie & mise en page (${fileName})`,
+                          quantityText: `${pageCount} pages estimées`,
+                          totalAmount: estimatedPrice,
+                          instructions: `Document analysé : ${fileName} | ~ ${pageCount} pages`,
+                          status: 'recu',
+                          wavePaymentUrl: getWavePaymentUrl(estimatedPrice)
+                        });
+
+                        onClose();
+                        if (onOrderSuccess) {
+                          onOrderSuccess(record);
+                        }
+                      }}
+                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center space-x-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>⚡ Commander cette saisie instantanément (Sans redirection)</span>
+                    </button>
+
+                    <a
+                      href={`https://wa.me/${PRIMARY_WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour OKBW ! J'ai estimé mon document "${fileName}" (~ ${pageCount} pages, estimation: ${estimatedPrice.toLocaleString('fr-FR')} FCFA). Je vous l'envoie pour saisie/mise en page.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center space-x-1.5 transition-colors"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Ouvrir sur WhatsApp</span>
+                    </a>
                   </div>
                 </div>
               )}

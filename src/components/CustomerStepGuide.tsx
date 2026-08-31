@@ -27,12 +27,20 @@ interface CustomerStepGuideProps {
   onExploreCatalog: () => void;
   onOpenCalculator: () => void;
   onOpenGuideBot?: (topic?: string) => void;
+  onOpenWaveQr?: () => void;
+  onOpenAdminSimulator?: () => void;
+  onOpenOrderTracker?: () => void;
+  onOpenPdfTools?: () => void;
 }
 
 export const CustomerStepGuide: React.FC<CustomerStepGuideProps> = ({
   onExploreCatalog,
   onOpenCalculator,
-  onOpenGuideBot
+  onOpenGuideBot,
+  onOpenWaveQr,
+  onOpenAdminSimulator,
+  onOpenOrderTracker,
+  onOpenPdfTools
 }) => {
   const [activeStep, setActiveStep] = useState<number>(0);
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('emploi');

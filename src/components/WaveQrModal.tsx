@@ -152,9 +152,14 @@ export const WaveQrModal: React.FC<WaveQrModalProps> = ({
           </div>
 
           {/* Guarantee Note */}
-          <div className="flex items-center justify-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>Paiement marchand vérifié • Notification instantanée</span>
+          <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-center space-x-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <span>Paiement marchand officiel direct Wave Business (Zéro numéro personnel à composer)</span>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              Pour transmettre vos fichiers & échanger : WhatsApp Business au <strong className="text-emerald-600 dark:text-emerald-400">+225 01 41 75 24 03</strong>
+            </p>
           </div>
 
         </div>

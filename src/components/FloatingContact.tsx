@@ -7,18 +7,24 @@ interface FloatingContactProps {
   onOpenCart: () => void;
   onOpenAdminGuide?: () => void;
   onOpenGuideBot?: () => void;
+  onOpenOrderTracker?: () => void;
+  onOpenPdfTools?: () => void;
+  onOpenMessenger?: () => void;
 }
 
 export const FloatingContact: React.FC<FloatingContactProps> = ({ 
   cartCount, 
   onOpenCart,
   onOpenAdminGuide,
-  onOpenGuideBot 
+  onOpenGuideBot,
+  onOpenOrderTracker,
+  onOpenPdfTools,
+  onOpenMessenger
 }) => {
   const [showTooltip, setShowTooltip] = useState(true);
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-3 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end space-y-2.5 pointer-events-none">
       
       {/* Bot Interactive Proactive Speech Bubble */}
       {onOpenGuideBot && showTooltip && (
@@ -47,6 +53,25 @@ export const FloatingContact: React.FC<FloatingContactProps> = ({
         </div>
       )}
 
+      {/* Instant In-App Live Messenger Button (No Redirection) */}
+      {onOpenMessenger && (
+        <button
+          id="floating-live-messenger-btn"
+          onClick={onOpenMessenger}
+          className="pointer-events-auto group relative flex items-center space-x-2 px-3.5 py-3 rounded-full bg-gradient-to-r from-teal-600 to-emerald-700 hover:from-teal-500 hover:to-emerald-600 text-white font-bold shadow-xl shadow-emerald-950/30 hover:scale-105 active:scale-95 transition-all border border-emerald-400/40"
+          title="Messagerie Instantanée Directe (Sans redirection)"
+        >
+          <div className="relative">
+            <MessageSquare className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white animate-ping"></span>
+          </div>
+          <span className="text-xs font-black tracking-wide">
+            Message Direct
+          </span>
+          <Sparkles className="w-3.5 h-3.5 text-amber-300 hidden sm:inline" />
+        </button>
+      )}
+
       {/* Floating Smart Guide Bot Button */}
       {onOpenGuideBot && (
         <button
@@ -63,6 +88,18 @@ export const FloatingContact: React.FC<FloatingContactProps> = ({
             DEMS • Assistant
           </span>
           <Sparkles className="w-3.5 h-3.5 text-amber-300 hidden sm:inline" />
+        </button>
+      )}
+
+      {/* Quick Order Tracker Floating Pill */}
+      {onOpenOrderTracker && (
+        <button
+          onClick={onOpenOrderTracker}
+          className="pointer-events-auto p-2.5 sm:px-3 sm:py-2 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white shadow-lg border border-slate-700 text-xs font-bold flex items-center space-x-1.5 backdrop-blur-md hover:scale-105 active:scale-95 transition-all"
+          title="Suivre votre commande"
+        >
+          <span>📦</span>
+          <span className="hidden sm:inline text-[11px]">Suivi Commande</span>
         </button>
       )}
 

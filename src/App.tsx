@@ -19,8 +19,11 @@ import { OrderTrackerModal } from './components/OrderTrackerModal';
 import { AdministrativeSimulatorModal } from './components/AdministrativeSimulatorModal';
 import { PdfToolsModal } from './components/PdfToolsModal';
 import { ProformaModal } from './components/ProformaModal';
+import { SmartSiteGuidanceBar } from './components/SmartSiteGuidance';
+import { InstantOrderSuccessModal } from './components/InstantOrderSuccessModal';
+import { LiveMessengerModal } from './components/LiveMessengerModal';
 import { CartItem, ServiceItem, UploadedFile } from './types';
-import { calculateServicePrice } from './utils/pricing';
+import { calculateServicePrice, StoredOrderRecord } from './utils/pricing';
 
 export default function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -58,6 +61,22 @@ export default function App() {
   const [isOrderTrackerOpen, setIsOrderTrackerOpen] = useState(false);
   const [isAdminSimulatorOpen, setIsAdminSimulatorOpen] = useState(false);
   const [isPdfToolsOpen, setIsPdfToolsOpen] = useState(false);
+  
+  // Instant In-App Order & Messenger (No Redirection)
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [currentSuccessOrder, setCurrentSuccessOrder] = useState<StoredOrderRecord | null>(null);
+  const [isMessengerOpen, setIsMessengerOpen] = useState(false);
+  const [messengerOrderRef, setMessengerOrderRef] = useState<string | undefined>(undefined);
+
+  const handleOrderSuccess = (order: StoredOrderRecord) => {
+    setCurrentSuccessOrder(order);
+    setIsSuccessModalOpen(true);
+  };
+
+  const handleOpenMessenger = (orderRef?: string) => {
+    setMessengerOrderRef(orderRef);
+    setIsMessengerOpen(true);
+  };
   const [proformaData, setProformaData] = useState<{
     isOpen: boolean;
     orderReference: string;
@@ -233,6 +252,24 @@ export default function App() {
         onToggleTheme={toggleTheme}
         onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
         onOpenGuideBot={() => handleOpenGuideBot()}
+        onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+        onOpenAdminSimulator={() => setIsAdminSimulatorOpen(true)}
+        onOpenPdfTools={() => setIsPdfToolsOpen(true)}
+        onOpenWaveQr={() => handleOpenWaveQr(500, 'Prestation OKBW')}
+        onOpenMessenger={() => handleOpenMessenger()}
+      />
+
+      {/* Real-time Smart Interactive Guidance Bar */}
+      <SmartSiteGuidanceBar
+        cartCount={totalCartCount}
+        cartTotal={cart.reduce((sum, item) => sum + item.totalPrice, 0)}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCalculator={() => setIsCalculatorOpen(true)}
+        onOpenWaveQr={(amount, title) => handleOpenWaveQr(amount || 500, title || 'Prestation OKBW')}
+        onOpenPdfTools={() => setIsPdfToolsOpen(true)}
+        onOpenAdminSimulator={() => setIsAdminSimulatorOpen(true)}
+        onOpenGuideBot={handleOpenGuideBot}
+        onExploreCatalog={scrollToCatalog}
       />
 
       {/* Main Content Sections */}
@@ -243,6 +280,10 @@ export default function App() {
           onExploreServices={scrollToCatalog}
           onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
           onOpenGuideBot={handleOpenGuideBot}
+          onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+          onOpenAdminSimulator={() => setIsAdminSimulatorOpen(true)}
+          onOpenPdfTools={() => setIsPdfToolsOpen(true)}
+          onOpenWaveQr={() => handleOpenWaveQr(500, 'Prestation OKBW')}
         />
 
         {/* Visual Step-by-Step Customer Guide (Orienting Clients) */}
@@ -250,6 +291,10 @@ export default function App() {
           onExploreCatalog={scrollToCatalog}
           onOpenCalculator={() => setIsCalculatorOpen(true)}
           onOpenGuideBot={handleOpenGuideBot}
+          onOpenWaveQr={() => handleOpenWaveQr(500, 'Prestation OKBW')}
+          onOpenAdminSimulator={() => setIsAdminSimulatorOpen(true)}
+          onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+          onOpenPdfTools={() => setIsPdfToolsOpen(true)}
         />
 
         {/* E-commerce Services Catalog & Ordering */}
@@ -257,6 +302,7 @@ export default function App() {
           onAddToCart={handleAddToCart}
           onSelectService={(service) => setSelectedServiceForModal(service)}
           onOpenCalculator={() => setIsCalculatorOpen(true)}
+          onOpenWaveQr={handleOpenWaveQr}
         />
 
         {/* Portfolio & Visual Realizations Gallery with Before/After Slider */}
@@ -308,6 +354,7 @@ export default function App() {
         onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
         onOpenAdminSimulator={() => setIsAdminSimulatorOpen(true)}
         onOpenPdfTools={() => setIsPdfToolsOpen(true)}
+        onOrderSuccess={handleOrderSuccess}
       />
 
       {/* Service Detail & Custom Order Modal */}
@@ -316,6 +363,7 @@ export default function App() {
         onClose={() => setSelectedServiceForModal(null)}
         onAddToCart={handleAddToCart}
         onOpenWaveQr={handleOpenWaveQr}
+        onOrderSuccess={handleOrderSuccess}
       />
 
       {/* Interactive Price Calculator Simulator Modal */}
@@ -324,6 +372,7 @@ export default function App() {
         onClose={() => setIsCalculatorOpen(false)}
         onAddToCart={(service, qty) => handleAddToCart(service, qty)}
         onOpenWaveQr={handleOpenWaveQr}
+        onOrderSuccess={handleOrderSuccess}
       />
 
       {/* Shopping Cart Drawer */}
@@ -336,6 +385,7 @@ export default function App() {
         onClearCart={handleClearCart}
         onExploreCatalog={scrollToCatalog}
         onOpenWaveQr={handleOpenWaveQr}
+        onOrderSuccess={handleOrderSuccess}
       />
 
       {/* Owner / Admin Guide & Live Activity Monitor Modal */}
@@ -366,6 +416,8 @@ export default function App() {
           setIsAdminSimulatorOpen(false);
           setSelectedServiceForModal(service);
         }}
+        onOpenWaveQr={handleOpenWaveQr}
+        onOrderSuccess={handleOrderSuccess}
       />
 
       {/* PDF Toolset Modal (Image-to-PDF, Page Counter) */}
@@ -376,6 +428,7 @@ export default function App() {
           setIsPdfToolsOpen(false);
           setSelectedServiceForModal(service);
         }}
+        onOrderSuccess={handleOrderSuccess}
       />
 
       {/* Proforma Invoice Viewer Modal */}
@@ -392,12 +445,32 @@ export default function App() {
         isAdministrative={proformaData.isAdministrative}
       />
 
-      {/* Floating WhatsApp, Cart, Guide Bot and Quick Guide buttons */}
+      {/* Instant In-App Order Success Modal (No Redirection) */}
+      <InstantOrderSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        order={currentSuccessOrder}
+        onOpenMessenger={handleOpenMessenger}
+        onOpenWaveQr={handleOpenWaveQr}
+        onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+      />
+
+      {/* In-App Live Direct Messenger (Instant sending without redirection) */}
+      <LiveMessengerModal
+        isOpen={isMessengerOpen}
+        onClose={() => setIsMessengerOpen(false)}
+        initialOrderRef={messengerOrderRef}
+        onOpenWaveQr={handleOpenWaveQr}
+      />
+
+      {/* Floating WhatsApp, Cart, Guide Bot, Live Messenger and Quick Guide buttons */}
       <FloatingContact
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenAdminGuide={() => setIsAdminGuideOpen(true)}
         onOpenGuideBot={() => setIsBotOpen(true)}
+        onOpenOrderTracker={() => setIsOrderTrackerOpen(true)}
+        onOpenMessenger={() => handleOpenMessenger()}
       />
 
     </div>

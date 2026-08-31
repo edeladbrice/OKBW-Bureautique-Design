@@ -49,7 +49,9 @@ import {
   buildWhatsAppFormattedMessage,
   PRIMARY_WHATSAPP_NUMBER,
   getWavePaymentUrl,
-  generateOrderReference
+  generateOrderReference,
+  saveOrderToHistory,
+  StoredOrderRecord
 } from '../utils/pricing';
 import { downloadProformaPDF } from '../utils/pdfInvoiceGenerator';
 import { 
@@ -77,6 +79,7 @@ interface SmartGuideBotProps {
   onOpenOrderTracker?: () => void;
   onOpenAdminSimulator?: () => void;
   onOpenPdfTools?: () => void;
+  onOrderSuccess?: (order: StoredOrderRecord) => void;
 }
 
 interface TreeState {
@@ -104,7 +107,8 @@ export const SmartGuideBot: React.FC<SmartGuideBotProps> = ({
   onOpenWaveQr,
   onOpenOrderTracker,
   onOpenAdminSimulator,
-  onOpenPdfTools
+  onOpenPdfTools,
+  onOrderSuccess
 }) => {
   const [messages, setMessages] = useState<BotMessage[]>([GREETING_MESSAGE]);
   const [inputText, setInputText] = useState('');
@@ -831,21 +835,58 @@ Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et
                       </div>
                     </div>
 
-                    {/* Action Buttons: WhatsApp & Direct Wave & Proforma PDF */}
+                    {/* Action Buttons: Instant in-app submit, WhatsApp, Wave & PDF */}
                     <div className="mt-4 pt-2 space-y-2">
-                      <a
-                        id="btn-whatsapp-order-confirm"
-                        href={msg.widgetData.whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm shadow-md shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5"
-                      >
-                        <MessageSquare className="w-5 h-5 fill-white/20" />
-                        <span>Valider et envoyer sur WhatsApp</span>
-                        <ArrowRight className="w-4 h-4 ml-1" />
-                      </a>
+                      <button
+                        type="button"
+                        id="btn-bot-instant-order-confirm"
+                        onClick={() => {
+                          const ref = generateOrderReference();
+                          const now = new Date();
+                          const formattedDate = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          const srvName = msg.widgetData.service?.name || 'Prestation OKBW';
+                          const tot = msg.widgetData.totalPrice || 0;
+                          const isAdm = msg.widgetData.isAdministrative || false;
+
+                          const record = saveOrderToHistory({
+                            orderReference: ref,
+                            date: formattedDate,
+                            customerName: msg.widgetData.customerName || 'Client',
+                            customerPhone: '',
+                            serviceName: srvName,
+                            quantityText: `${msg.widgetData.quantity} ${msg.widgetData.service?.unitLabel || 'unité'}`,
+                            totalAmount: tot,
+                            instructions: msg.widgetData.instructions || 'Prestation standard',
+                            status: 'recu',
+                            wavePaymentUrl: getWavePaymentUrl(tot),
+                            isAdministrative: isAdm
+                          });
+
+                          onClose();
+                          if (onOrderSuccess) {
+                            onOrderSuccess(record);
+                          }
+                        }}
+                        className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 text-white font-black text-sm shadow-md shadow-emerald-600/25 transition-all transform hover:-translate-y-0.5 animate-pulse"
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-300" />
+                        <span>⚡ Valider et transmettre instantanément (Sans redirection)</span>
+                      </button>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                        <a
+                          id="btn-whatsapp-order-confirm"
+                          href={msg.widgetData.whatsappUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center space-x-1 py-2 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors"
+                          title="Ouvrir sur WhatsApp"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>WhatsApp</span>
+                        </a>
+
                         <button
                           type="button"
                           onClick={() => {
@@ -869,30 +910,30 @@ Cliquez sur le bouton ci-dessous pour m'envoyer ces informations sur WhatsApp et
                               turnaround: 'Standard Rapide'
                             });
                           }}
-                          className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5"
+                          className="py-2 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-800 dark:text-slate-100 font-bold text-xs transition-colors flex items-center justify-center space-x-1"
                         >
                           <Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                          <span>Devis PDF Proforma</span>
+                          <span>Devis PDF</span>
                         </button>
 
                         {onOpenWaveQr ? (
                           <button
                             type="button"
                             onClick={() => onOpenWaveQr(msg.widgetData.totalPrice, msg.widgetData.service?.name || 'Prestation OKBW')}
-                            className="py-2.5 px-3 rounded-xl bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 text-sky-800 dark:text-sky-300 font-bold text-xs border border-sky-200 dark:border-sky-800 transition-colors flex items-center justify-center space-x-1.5"
+                            className="py-2 px-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-colors flex items-center justify-center space-x-1 shadow-sm"
                           >
-                            <QrCode className="w-3.5 h-3.5 text-sky-600" />
-                            <span>QR Code Wave</span>
+                            <QrCode className="w-3.5 h-3.5" />
+                            <span>Payer Wave</span>
                           </button>
                         ) : (
                           <a
                             href={getWavePaymentUrl(msg.widgetData.totalPrice)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="py-2.5 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs transition-all flex items-center justify-center space-x-1.5"
+                            className="py-2 px-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-all flex items-center justify-center space-x-1"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-sky-200" />
-                            <span>Lien Wave</span>
+                            <span>Wave</span>
                           </a>
                         )}
                       </div>

@@ -29,6 +29,10 @@ interface HeroProps {
   onExploreServices: () => void;
   onOpenAdminGuide?: () => void;
   onOpenGuideBot?: (initialTopic?: string) => void;
+  onOpenOrderTracker?: () => void;
+  onOpenAdminSimulator?: () => void;
+  onOpenPdfTools?: () => void;
+  onOpenWaveQr?: () => void;
 }
 
 const HERO_PROFILES = [
@@ -74,7 +78,11 @@ export const Hero: React.FC<HeroProps> = ({
   onOpenCalculator, 
   onExploreServices,
   onOpenAdminGuide,
-  onOpenGuideBot
+  onOpenGuideBot,
+  onOpenOrderTracker,
+  onOpenAdminSimulator,
+  onOpenPdfTools,
+  onOpenWaveQr
 }) => {
   const [activeProfileIdx, setActiveProfileIdx] = useState(0);
   const activeProfile = HERO_PROFILES[activeProfileIdx];
@@ -87,7 +95,7 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Forefront Announcement Bar for Smart Guide */}
-        <div className="mb-4 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-blue-900 via-[#0F52BA] to-slate-900 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-2 border border-blue-400/20">
+        <div className="mb-3 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-blue-900 via-[#0F52BA] to-slate-900 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-2 border border-blue-400/20">
           <div className="flex items-center space-x-2 text-xs sm:text-sm font-medium">
             <span className="p-1 rounded-lg bg-orange-500 text-white">
               <Bot className="w-4 h-4" />
@@ -110,6 +118,107 @@ export const Hero: React.FC<HeroProps> = ({
               Étapes de commande
             </a>
           </div>
+        </div>
+
+        {/* Quick Tools Launch Strip */}
+        <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {onOpenPdfTools && (
+            <button
+              type="button"
+              onClick={onOpenPdfTools}
+              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-blue-50/60 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 text-left shadow-xs transition-all group flex items-center space-x-2.5"
+            >
+              <span className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 group-hover:scale-105 transition-transform text-base">
+                📄
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600">
+                  Boîte PDF
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Photos ➔ PDF assemblé
+                </div>
+              </div>
+            </button>
+          )}
+
+          {onOpenAdminSimulator && (
+            <button
+              type="button"
+              onClick={onOpenAdminSimulator}
+              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-orange-50/60 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 text-left shadow-xs transition-all group flex items-center space-x-2.5"
+            >
+              <span className="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#FF5E14] group-hover:scale-105 transition-transform text-base">
+                ⚖️
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 truncate group-hover:text-[#FF5E14]">
+                  Actes Judiciaires
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Casier & Nationalité 72h
+                </div>
+              </div>
+            </button>
+          )}
+
+          {onOpenOrderTracker && (
+            <button
+              type="button"
+              onClick={onOpenOrderTracker}
+              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-emerald-50/60 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 text-left shadow-xs transition-all group flex items-center space-x-2.5"
+            >
+              <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 group-hover:scale-105 transition-transform text-base">
+                📦
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 truncate group-hover:text-emerald-600">
+                  Suivi de Commande
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Statut de votre dossier
+                </div>
+              </div>
+            </button>
+          )}
+
+          {onOpenWaveQr ? (
+            <button
+              type="button"
+              onClick={() => onOpenWaveQr()}
+              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-sky-50/60 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 text-left shadow-xs transition-all group flex items-center space-x-2.5"
+            >
+              <span className="p-2 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 group-hover:scale-105 transition-transform text-base">
+                📱
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 truncate group-hover:text-sky-600">
+                  QR Code Wave
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Paiement 1 clic
+                </div>
+              </div>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenCalculator}
+              className="p-2.5 rounded-2xl bg-white dark:bg-slate-900 hover:bg-blue-50/60 dark:hover:bg-slate-800/80 border border-slate-200/90 dark:border-slate-800 text-left shadow-xs transition-all group flex items-center space-x-2.5"
+            >
+              <span className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 group-hover:scale-105 transition-transform text-base">
+                ⚡
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-black text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600">
+                  Simulateur Devis
+                </div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  Calcul dégressif instantané
+                </div>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Main Bento Grid Hub */}

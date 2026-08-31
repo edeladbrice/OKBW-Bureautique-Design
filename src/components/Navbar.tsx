@@ -22,6 +22,11 @@ interface NavbarProps {
   onToggleTheme?: () => void;
   onOpenAdminGuide?: () => void;
   onOpenGuideBot?: () => void;
+  onOpenOrderTracker?: () => void;
+  onOpenAdminSimulator?: () => void;
+  onOpenPdfTools?: () => void;
+  onOpenWaveQr?: () => void;
+  onOpenMessenger?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -31,7 +36,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   theme = 'light',
   onToggleTheme,
   onOpenAdminGuide,
-  onOpenGuideBot
+  onOpenGuideBot,
+  onOpenOrderTracker,
+  onOpenAdminSimulator,
+  onOpenPdfTools,
+  onOpenWaveQr,
+  onOpenMessenger
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -166,6 +176,45 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
+            {/* PDF Tools CTA */}
+            {onOpenPdfTools && (
+              <button
+                id="nav-pdf-tools-btn"
+                onClick={onOpenPdfTools}
+                className="hidden xl:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all shadow-sm"
+                title="Boîte à Outils PDF (Photos -> PDF, Compteur)"
+              >
+                <span>📄</span>
+                <span>Outils PDF</span>
+              </button>
+            )}
+
+            {/* Actes 72h Judicial Simulator */}
+            {onOpenAdminSimulator && (
+              <button
+                id="nav-admin-sim-btn"
+                onClick={onOpenAdminSimulator}
+                className="hidden xl:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 text-[#FF5E14] border border-orange-200 dark:border-orange-900/50 transition-all shadow-sm"
+                title="Démarches Actes Judiciaires 72h (Casier, Nationalité)"
+              >
+                <span>⚖️</span>
+                <span>Actes 72h</span>
+              </button>
+            )}
+
+            {/* Order Tracker CTA */}
+            {onOpenOrderTracker && (
+              <button
+                id="nav-order-tracker-btn"
+                onClick={onOpenOrderTracker}
+                className="hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-all shadow-sm"
+                title="Suivre votre commande en direct"
+              >
+                <span>📦</span>
+                <span>Suivi</span>
+              </button>
+            )}
+
             {/* Express Price Calculator CTA */}
             <button
               id="nav-calc-btn"
@@ -177,16 +226,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Simulateur</span>
             </button>
 
+            {/* Live In-App Messenger (Instant - No Redirection) */}
+            {onOpenMessenger && (
+              <button
+                id="nav-live-messenger-btn"
+                onClick={onOpenMessenger}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-sm transition-all"
+                title="Discuter en direct et envoyer vos messages sans quitter le site"
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-300 animate-ping"></span>
+                <span>Message Direct</span>
+              </button>
+            )}
+
             {/* Direct WhatsApp CTA */}
             <a
               id="nav-whatsapp-cta"
               href={CONTACT_INFO.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-[#FF5E14] hover:brightness-110 text-white shadow-md shadow-orange-500/25 transition-all"
+              className="hidden lg:flex items-center space-x-1.5 px-3.5 py-2 rounded-full text-xs font-bold bg-[#FF5E14] hover:brightness-110 text-white shadow-md shadow-orange-500/25 transition-all"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Commander sur WhatsApp</span>
+              <span>WhatsApp</span>
             </a>
 
             {/* Shopping Cart Button */}
@@ -273,6 +335,60 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                {onOpenPdfTools && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenPdfTools();
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+                  >
+                    <span>📄</span>
+                    <span>Outils PDF</span>
+                  </button>
+                )}
+
+                {onOpenAdminSimulator && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenAdminSimulator();
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-xl text-xs font-bold bg-orange-50 dark:bg-orange-950/40 text-[#FF5E14] border border-orange-200 dark:border-orange-900/50"
+                  >
+                    <span>⚖️</span>
+                    <span>Actes 72h</span>
+                  </button>
+                )}
+
+                {onOpenOrderTracker && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenOrderTracker();
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                  >
+                    <span>📦</span>
+                    <span>Suivi Direct</span>
+                  </button>
+                )}
+
+                {onOpenWaveQr && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenWaveQr();
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800"
+                  >
+                    <span>📱</span>
+                    <span>QR Code Wave</span>
+                  </button>
+                )}
+              </div>
+
               {onOpenGuideBot && (
                 <button
                   onClick={() => {
@@ -298,6 +414,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
 
+            {onOpenMessenger && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenMessenger();
+                }}
+                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Message Direct (Sans redirection)</span>
+              </button>
+            )}
+
             <a
               href={CONTACT_INFO.whatsappUrl}
               target="_blank"
@@ -305,7 +434,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-[#FF5E14] text-white shadow-md"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>Commander sur WhatsApp</span>
+              <span>Ouvrir sur WhatsApp</span>
             </a>
           </div>
         )}

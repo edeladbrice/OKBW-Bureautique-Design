@@ -22,7 +22,11 @@ import {
   generateQuickServiceWhatsAppLink,
   TURNAROUND_OPTIONS,
   ADMINISTRATIVE_LOCKED_TURNAROUND,
-  isAdministrativeService
+  isAdministrativeService,
+  generateOrderReference,
+  saveOrderToHistory,
+  StoredOrderRecord,
+  getWavePaymentUrl
 } from '../utils/pricing';
 import { TurnaroundSelector } from './TurnaroundSelector';
 
@@ -30,12 +34,16 @@ interface PriceCalculatorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (service: ServiceItem, quantity: number) => void;
+  onOpenWaveQr?: (amount: number, title: string) => void;
+  onOrderSuccess?: (order: StoredOrderRecord) => void;
 }
 
 export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
   isOpen,
   onClose,
-  onAddToCart
+  onAddToCart,
+  onOpenWaveQr,
+  onOrderSuccess
 }) => {
   if (!isOpen) return null;
 
@@ -81,6 +89,32 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
   const handleAddAndClose = () => {
     onAddToCart(selectedService, quantity);
     onClose();
+  };
+
+  const handleInstantOrder = () => {
+    const ref = generateOrderReference();
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    const record = saveOrderToHistory({
+      orderReference: ref,
+      date: formattedDate,
+      customerName: 'Client',
+      customerPhone: '',
+      serviceName: selectedService.name,
+      quantityText: `${quantity} ${selectedService.unitLabel}`,
+      totalAmount: totalPrice,
+      instructions: `${isAdministrative ? 'Délai légal : 72h ouvrées (3 jours)' : `Délai : ${selectedTurnaround.label}`}`,
+      status: 'recu',
+      wavePaymentUrl: getWavePaymentUrl(totalPrice),
+      isAdministrative
+    });
+
+    onClose();
+
+    if (onOrderSuccess) {
+      onOrderSuccess(record);
+    }
   };
 
   return (
@@ -292,20 +326,30 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
           
           <button
             onClick={handleAddAndClose}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition-all whitespace-nowrap"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors whitespace-nowrap"
           >
-            <ShoppingBag className="w-4 h-4 text-amber-400" />
-            <span>Ajouter ce calcul au panier</span>
+            <ShoppingBag className="w-4 h-4 text-amber-500" />
+            <span>Ajouter au panier</span>
+          </button>
+
+          <button
+            id="calc-instant-order-btn"
+            onClick={handleInstantOrder}
+            className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-md transition-all whitespace-nowrap"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>⚡ Envoyer ce devis instantanément (Sans redirection)</span>
           </button>
 
           <a
             href={generateQuickServiceWhatsAppLink(selectedService, quantity, undefined, undefined, selectedTurnaround)}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition-colors whitespace-nowrap"
+            className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-3.5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors whitespace-nowrap"
+            title="Ouvrir sur WhatsApp"
           >
-            <MessageSquare className="w-4 h-4" />
-            <span>{isAdministrative ? "Valider la démarche sur WhatsApp" : "Valider la commande sur WhatsApp"}</span>
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+            <span>WhatsApp</span>
           </a>
 
         </div>

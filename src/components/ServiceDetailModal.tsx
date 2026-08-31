@@ -19,8 +19,10 @@ import {
   Receipt,
   Scale,
   Download,
-  QrCode
+  QrCode,
+  Sparkles
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { ServiceItem, TurnaroundOption } from '../types';
 import { 
   calculateServicePrice, 
@@ -30,10 +32,15 @@ import {
   TURNAROUND_OPTIONS,
   ADMINISTRATIVE_LOCKED_TURNAROUND,
   isAdministrativeService,
-  generateOrderReference
+  generateOrderReference,
+  saveOrderToHistory,
+  StoredOrderRecord,
+  getWavePaymentUrl,
+  PRIMARY_WHATSAPP_NUMBER
 } from '../utils/pricing';
 import { downloadProformaPDF } from '../utils/pdfInvoiceGenerator';
 import { TurnaroundSelector } from './TurnaroundSelector';
+import { SmartStepWalkthrough } from './SmartSiteGuidance';
 
 interface ServiceDetailModalProps {
   service: ServiceItem | null;
@@ -46,13 +53,15 @@ interface ServiceDetailModalProps {
     turnaroundId?: string
   ) => void;
   onOpenWaveQr?: (amount: number, title: string) => void;
+  onOrderSuccess?: (order: StoredOrderRecord) => void;
 }
 
 export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   service,
   onClose,
   onAddToCart,
-  onOpenWaveQr
+  onOpenWaveQr,
+  onOrderSuccess
 }) => {
   if (!service) return null;
 
@@ -117,6 +126,44 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
       turnaround: `${selectedTurnaround.label} (${selectedTurnaround.hoursDetail})`,
       isAdministrative
     });
+  };
+
+  const handleInstantOrder = () => {
+    try {
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.6 }
+      });
+    } catch (e) {}
+
+    const ref = generateOrderReference();
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    const record = saveOrderToHistory({
+      orderReference: ref,
+      date: formattedDate,
+      customerName: customerName.trim() || 'Client',
+      customerPhone: customerPhone.trim() || '',
+      serviceName: service.name,
+      quantityText: `${quantity} ${service.unitLabel}`,
+      totalAmount: totalPrice,
+      instructions: [
+        customerPhone.trim() ? `Tél: ${customerPhone.trim()}` : '',
+        isAdministrative ? 'Délai légal : 72h ouvrées (3 jours)' : `Délai : ${selectedTurnaround.label}`,
+        customNotes.trim()
+      ].filter(Boolean).join(' | ') || 'Prestation standard',
+      status: 'recu',
+      wavePaymentUrl: getWavePaymentUrl(totalPrice),
+      isAdministrative
+    });
+
+    onClose();
+
+    if (onOrderSuccess) {
+      onOrderSuccess(record);
+    }
   };
 
   const whatsappRedirectUrl = generateQuickServiceWhatsAppLink(
@@ -190,6 +237,14 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 sm:p-7 space-y-6 max-h-[72vh] overflow-y-auto">
           
+          {/* Smart Interactive Step Guide */}
+          <SmartStepWalkthrough 
+            currentStep={customerName.trim() ? 2 : 1}
+            isAdministrative={isAdministrative}
+            serviceTitle={service.name}
+            amount={totalPrice}
+          />
+
           {/* ADMINISTRATIVE SPECIAL PROTOCOL BOX (When Casier / Nationalité is opened) */}
           {isAdministrative && (
             <div className="p-5 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border-2 border-[#FF5E14] text-slate-900 dark:text-slate-100 space-y-3.5 shadow-sm">
@@ -485,41 +540,54 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             </span>
           </div>
 
-          <div className="flex items-center space-x-2 w-full sm:w-auto flex-wrap sm:flex-nowrap gap-y-2">
-            {/* Direct WhatsApp fast order with structured pre-filled message */}
-            <a
-              id="detail-modal-whatsapp-validate-btn"
-              href={whatsappRedirectUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-950/20 transition-all whitespace-nowrap"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>{isAdministrative ? "Valider la démarche sur WhatsApp" : "Valider la commande sur WhatsApp"}</span>
-            </a>
-
-            {/* Add to Cart */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            {/* Primary Instant In-App Action */}
             <button
-              id="detail-modal-add-cart-btn"
-              onClick={handleAddToCart}
-              className={`w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-3 rounded-xl font-extrabold text-xs transition-all whitespace-nowrap ${
-                isAdded 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-[#FF5E14] hover:bg-[#e04f0f] text-white shadow-md shadow-orange-500/20'
-              }`}
+              id="detail-modal-instant-validate-btn"
+              onClick={handleInstantOrder}
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-950/20 transition-all whitespace-nowrap animate-pulse"
             >
-              {isAdded ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>Ajouté au panier !</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Ajouter au panier</span>
-                </>
-              )}
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <span>{isAdministrative ? "⚡ Transmettre le dossier instantanément" : "⚡ Envoyer la commande (Sans redirection)"}</span>
             </button>
+
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              {/* Optional WhatsApp Link */}
+              <a
+                id="detail-modal-whatsapp-validate-btn"
+                href={whatsappRedirectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors whitespace-nowrap"
+                title="Ouvrir également sur WhatsApp"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                <span>WhatsApp</span>
+              </a>
+
+              {/* Add to Cart */}
+              <button
+                id="detail-modal-add-cart-btn"
+                onClick={handleAddToCart}
+                className={`flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all whitespace-nowrap ${
+                  isAdded 
+                    ? 'bg-emerald-600 text-white' 
+                    : 'bg-[#FF5E14] hover:bg-[#e04f0f] text-white shadow-md shadow-orange-500/20'
+                }`}
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Ajouté !</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>Ajouter au panier</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
         </div>

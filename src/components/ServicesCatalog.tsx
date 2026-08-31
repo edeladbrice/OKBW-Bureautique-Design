@@ -24,12 +24,14 @@ interface ServicesCatalogProps {
   onAddToCart: (service: ServiceItem, quantity?: number) => void;
   onSelectService: (service: ServiceItem) => void;
   onOpenCalculator: () => void;
+  onOpenWaveQr?: (amount: number, serviceTitle: string) => void;
 }
 
 export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
   onAddToCart,
   onSelectService,
-  onOpenCalculator
+  onOpenCalculator,
+  onOpenWaveQr
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -316,7 +318,22 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                     <span>Détails & Pièces</span>
                   </button>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5">
+                    {/* Quick Wave QR Code button */}
+                    {onOpenWaveQr && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenWaveQr(service.basePrice, service.name);
+                        }}
+                        className="p-2.5 rounded-2xl bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 shadow-xs transition-all"
+                        title="Afficher le QR Code Wave Business pour ce service"
+                      >
+                        <span className="text-xs">📱</span>
+                      </button>
+                    )}
+
                     {/* Direct WhatsApp fast order */}
                     <a
                       href={generateQuickServiceWhatsAppLink(service, 1)}

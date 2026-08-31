@@ -22,13 +22,11 @@ export interface ProformaInvoiceData {
 }
 
 export function generateProformaPDF(data: ProformaInvoiceData): jsPDF {
-  const doc尴尬 = new jsPDF({
+  const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
   });
-
-  const doc = doc尴尬;
 
   // Colors
   const primaryBlue = [15, 82, 186]; // #0F52BA
