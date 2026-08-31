@@ -12,7 +12,8 @@ import {
   Layers,
   ShieldCheck,
   Scale,
-  Lock
+  Lock,
+  FileCheck2
 } from 'lucide-react';
 import { ServiceItem, TurnaroundOption } from '../types';
 import { SERVICES_DATA, CONTACT_INFO } from '../data/servicesData';
@@ -264,6 +265,26 @@ export const PriceCalculatorModal: React.FC<PriceCalculatorModalProps> = ({
               isAdministrativeLocked={isAdministrative}
             />
           </div>
+
+          {/* 5 Required Documents Checklist for Administrative Services */}
+          {selectedService.requiredDocuments && selectedService.requiredDocuments.length > 0 && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-orange-50/90 dark:bg-slate-800/95 border-2 border-[#FF5E14] space-y-3 shadow-xs">
+              <div className="flex items-center space-x-2 text-xs sm:text-sm font-black text-[#FF5E14] uppercase tracking-wide">
+                <FileCheck2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>📋 {selectedService.requiredDocuments.length} Pièces à fournir pour ce dossier :</span>
+              </div>
+              <div className="space-y-1.5">
+                {selectedService.requiredDocuments.map((doc, dIdx) => (
+                  <div key={dIdx} className="flex items-start space-x-2 text-xs font-semibold text-slate-900 dark:text-slate-100 p-2 rounded-xl bg-white dark:bg-slate-900 border border-orange-200 dark:border-slate-700">
+                    <span className="w-5 h-5 rounded-full bg-[#FF5E14] text-white flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5">
+                      {dIdx + 1}
+                    </span>
+                    <span className="leading-tight">{doc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Live Calculation Display Box */}
           <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 text-white shadow-lg space-y-4">

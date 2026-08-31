@@ -333,7 +333,9 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     norm.includes('greffe') || 
     norm.includes('jugement') || 
     norm.includes('timbre') ||
-    norm.includes('acte administratif')
+    norm.includes('acte administratif') ||
+    norm.includes('piece') ||
+    norm.includes('document')
   ) {
     const isDuo = norm.includes('pack') || norm.includes('duo') || (norm.includes('casier') && norm.includes('nationalite'));
     const isCasierOnly = norm.includes('casier') && !norm.includes('nationalite');
@@ -344,14 +346,14 @@ export function processUserQuery(query: string, currentWizardState?: StepWizardS
     return {
       id: `bot_${Date.now()}`,
       sender: 'bot',
-      text: `🏛️ Procédure Réglementaire des Actes Judiciaires & Administratifs\n\nVoici les règles officielles en vigueur en Côte d'Ivoire :\n\n1️⃣ Règlement de la demande : Nécessaire à l'enregistrement pour le paiement effectif des timbres fiscaux d'État et droits de greffe.\n2️⃣ Reçu officiel IMMÉDIAT : Dès confirmation de votre règlement, vous recevez votre reçu officiel de demande et transaction.\n3️⃣ Retrait sous 72h (3 jours ouvrés) : Le document authentifié est retiré au tribunal après signature du magistrat.\n\n📄 Tarifs officiels :\n• Certificat de Nationalité : 3 500 FCFA\n• Casier Judiciaire (Bulletin N°3) : 3 500 FCFA\n• Pack Duo (Nationalité + Casier) : 6 500 FCFA (Économie de 500 F)`,
+      text: `🏛️ Procédure & 5 Pièces à Fournir (Actes Judiciaires CI) :\n\n📋 Les 5 Pièces Obligatoires pour votre dossier :\n1️⃣ Extrait d'acte de naissance ou copie intégrale du demandeur (de préférence récent)\n2️⃣ Photocopie de la CNI / Passeport / Attestation d'identité du demandeur (si majeur)\n3️⃣ Certificat de nationalité ivoirienne du père OU de la mère (ou copie CNI / acte de naissance du parent ivoirien)\n4️⃣ Une (1) photo d'identité couleur récente sur fond blanc net\n5️⃣ Justificatif de résidence / domicile actuel\n\n⚖️ Modalités Officielles :\n• Règlement à l'enregistrement : requis pour le paiement des timbres fiscaux d'État et droits de greffe.\n• Reçu officiel IMMÉDIAT : dès confirmation de votre règlement Wave.\n• Retrait sous 72h (3 jours ouvrés) : retrait du document authentifié au tribunal.\n\n💰 Tarifs officiels :\n• Certificat de Nationalité : 3 500 FCFA\n• Casier Judiciaire (Bulletin N°3) : 3 500 FCFA\n• Pack Duo (Nationalité + Casier) : 6 500 FCFA (Économie de 500 F)`,
       timestamp: now,
       widgetType: 'admin_procedure',
       widgetData: targetService || SERVICES_DATA.find(s => s.id === 'certificat-nationalite'),
       quickReplies: [
-        { id: 'order_admin_duo', label: '📦 Commander Pack Duo (6 500 F)', action: 'select_service_direct', payload: 'pack-nationalite-casier', primary: true },
-        { id: 'order_admin_nat', label: '⚖️ Certificat Nationalité (3 500 F)', action: 'select_service_direct', payload: 'certificat-nationalite' },
-        { id: 'order_admin_casier', label: '⚖️ Casier Judiciaire (3 500 F)', action: 'select_service_direct', payload: 'casier-judiciaire' }
+        { id: 'order_admin_nat', label: '⚖️ Certificat Nationalité (3 500 F)', action: 'select_service_direct', payload: 'certificat-nationalite', primary: true },
+        { id: 'order_admin_casier', label: '⚖️ Casier Judiciaire (3 500 F)', action: 'select_service_direct', payload: 'casier-judiciaire' },
+        { id: 'order_admin_duo', label: '📦 Commander Pack Duo (6 500 F)', action: 'select_service_direct', payload: 'pack-nationalite-casier' }
       ]
     };
   }

@@ -406,11 +406,11 @@ export const SERVICES_DATA: ServiceItem[] = [
       paymentRequirement: 'Paiement requis à l\'enregistrement pour acquitter les timbres fiscaux officiels'
     },
     requiredDocuments: [
-      'Extrait d\'acte de naissance ou copie intégrale du demandeur (de préférence récent)',
-      'Photocopie de la CNI / Passeport / Attestation d\'identité du demandeur (si majeur)',
-      'Certificat de nationalité ivoirienne du père OU de la mère (ou copie CNI / acte de naissance du parent ivoirien)',
-      'Une (1) photo d\'identité couleur récente sur fond blanc net',
-      'Justificatif de résidence / domicile actuel'
+      '1. Extrait d\'acte de naissance ou copie intégrale du demandeur (de préférence récent)',
+      '2. Photocopie de la CNI / Passeport / Attestation d\'identité du demandeur (si majeur)',
+      '3. Certificat de nationalité ivoirienne du père OU de la mère (ou copie CNI / acte de naissance du parent ivoirien)',
+      '4. Une (1) photo d\'identité couleur récente sur fond blanc net',
+      '5. Justificatif de résidence / domicile actuel'
     ],
     inclusions: [
       'Paiement préalable des timbres fiscaux et droits de greffe officiels',
@@ -441,10 +441,11 @@ export const SERVICES_DATA: ServiceItem[] = [
       paymentRequirement: 'Paiement requis à l\'enregistrement pour acquitter les droits de chancellerie & timbres'
     },
     requiredDocuments: [
-      'Extrait d\'acte de naissance ou copie d\'acte d\'état civil conforme',
-      'Photocopie recto/verso de la Carte Nationale d\'Identité (CNI) ou du Passeport valide',
-      'Certificat de nationalité ivoirienne (si requis selon la juridiction de naissance)',
-      'Précision exacte du lieu, de la date de naissance et de la juridiction compétente'
+      '1. Extrait d\'acte de naissance ou copie d\'acte d\'état civil conforme',
+      '2. Photocopie recto/verso de la Carte Nationale d\'Identité (CNI) ou du Passeport valide',
+      '3. Certificat de nationalité ivoirienne du demandeur ou de l\'un des parents',
+      '4. Une (1) photo d\'identité couleur récente sur fond blanc net',
+      '5. Justificatif de résidence / domicile actuel & précision du Tribunal de naissance'
     ],
     inclusions: [
       'Paiement des droits de chancellerie et timbres fiscaux officiels au greffe',
@@ -475,10 +476,11 @@ export const SERVICES_DATA: ServiceItem[] = [
       paymentRequirement: 'Paiement requis à l\'enregistrement pour acquitter les timbres fiscaux des 2 actes'
     },
     requiredDocuments: [
-      'Extrait d\'acte de naissance ou copie intégrale récente',
-      'Photocopie de la CNI / Passeport en cours de validité',
-      'Pièce d\'identité ou Certificat de nationalité du père ou de la mère',
-      'Deux (2) photos d\'identité récentes sur fond blanc'
+      '1. Extrait d\'acte de naissance ou copie intégrale récente du demandeur',
+      '2. Photocopie de la CNI / Passeport / Attestation d\'identité en cours de validité',
+      '3. Certificat de nationalité ou CNI du père OU de la mère',
+      '4. Deux (2) photos d\'identité couleur récentes sur fond blanc net',
+      '5. Justificatif de résidence / domicile actuel & Tribunal de naissance'
     ],
     inclusions: [
       'Prise en charge intégrale des deux démarches administratives simultanément',

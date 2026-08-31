@@ -268,16 +268,28 @@ export const ServicesCatalog: React.FC<ServicesCatalogProps> = ({
                     {service.description}
                   </p>
 
-                  {/* Required Documents Highlight Chip */}
+                  {/* Required Documents Highlight Chip (5 Clear Pieces) */}
                   {service.requiredDocuments && service.requiredDocuments.length > 0 && (
-                    <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 space-y-1">
-                      <div className="flex items-center space-x-1.5 text-[11px] font-bold text-[#FF5E14] dark:text-orange-400">
-                        <FileCheck className="w-3.5 h-3.5" />
-                        <span>{service.requiredDocuments.length} pièces justificatives à fournir :</span>
+                    <div className="p-3.5 rounded-2xl bg-orange-50/90 dark:bg-slate-800/95 border-2 border-orange-300 dark:border-orange-500/50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1.5 text-xs font-black text-[#FF5E14] dark:text-orange-400 uppercase tracking-tight">
+                          <FileCheck className="w-4 h-4" />
+                          <span>{service.requiredDocuments.length} Pièces Requises :</span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-200/60 dark:bg-orange-950 text-orange-950 dark:text-orange-200 font-bold">
+                          Dossier 72h
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
-                        {service.requiredDocuments.join(', ')}
-                      </p>
+                      <div className="space-y-1.5">
+                        {service.requiredDocuments.map((doc, dIdx) => (
+                          <div key={dIdx} className="flex items-start space-x-2 text-[11px] text-slate-800 dark:text-slate-200 font-medium">
+                            <span className="w-4 h-4 rounded-full bg-[#FF5E14] text-white flex items-center justify-center text-[9px] font-black flex-shrink-0 mt-0.5">
+                              {dIdx + 1}
+                            </span>
+                            <span className="leading-tight">{doc}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

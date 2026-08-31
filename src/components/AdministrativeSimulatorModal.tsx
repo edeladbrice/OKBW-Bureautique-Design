@@ -40,24 +40,6 @@ interface ProcedureDef {
 
 const PROCEDURES_DATA: ProcedureDef[] = [
   {
-    id: 'casier-judiciaire',
-    name: 'Casier Judiciaire (Extrait du Bulletin N°3)',
-    category: 'judiciaire',
-    officialCost: 3500,
-    courtFeeDescription: 'Timbres fiscaux officiels, greffe du tribunal et expédition certifiée inclus',
-    legalTurnaround: '72 heures ouvrées (3 jours)',
-    requiredDocuments: [
-      { name: 'Copie lisible de la CNI ou du Passeport', description: 'Scan ou photo nette recto/verso', mandatory: true },
-      { name: 'Copie de l\'Extrait d\'Acte de Naissance', description: 'Moins d\'un an ou extrait officiel', mandatory: true },
-      { name: 'Précision du Tribunal de Première Instance', description: 'Tribunal de votre lieu de naissance (ex: Abidjan-Plateau, Yopougon, Bouaké, etc.)', mandatory: true }
-    ],
-    tips: [
-      'Indispensable pour tout dossier de candidature ou concours de la Fonction Publique.',
-      'Reçu officiel de dépôt transmis immédiatement dès confirmation du règlement.',
-      'Retrait physique du document original ou expédition sécurisée.'
-    ]
-  },
-  {
     id: 'certificat-nationalite',
     name: 'Certificat de Nationalité Ivoirienne',
     category: 'judiciaire',
@@ -65,13 +47,76 @@ const PROCEDURES_DATA: ProcedureDef[] = [
     courtFeeDescription: 'Frais de greffe, timbres fiscaux d\'État et enregistrement au Parquet',
     legalTurnaround: '72 heures ouvrées (3 jours)',
     requiredDocuments: [
-      { name: 'Extrait d\'Acte de Naissance du demandeur', description: 'Original ou copie certifiée conforme', mandatory: true },
-      { name: 'Copie CNI ou Certificat de Nationalité du père ou de la mère', description: 'Preuve de la filiation ivoirienne', mandatory: true },
-      { name: 'Certificat de Résidence', description: 'Délivré par le commissariat ou la mairie', mandatory: false }
+      { 
+        name: '1. Extrait d\'acte de naissance ou copie intégrale du demandeur', 
+        description: 'De préférence récent (moins d\'un an ou extrait officiel conforme avec mention lisible).', 
+        mandatory: true 
+      },
+      { 
+        name: '2. Photocopie de la CNI / Passeport / Attestation d\'identité', 
+        description: 'Document officiel du demandeur (si majeur) en cours de validité (recto-verso bien net).', 
+        mandatory: true 
+      },
+      { 
+        name: '3. Certificat de nationalité ivoirienne du père OU de la mère', 
+        description: 'Ou copie CNI / acte de naissance du parent ivoirien attestant de la filiation ivoirienne.', 
+        mandatory: true 
+      },
+      { 
+        name: '4. Une (1) photo d\'identité couleur récente', 
+        description: 'Photo nette sur fond blanc sans reflet ni accessoire couvrant le visage.', 
+        mandatory: true 
+      },
+      { 
+        name: '5. Justificatif de résidence / domicile actuel', 
+        description: 'Certificat de résidence délivré par le commissariat/mairie ou facture CIE/SODECI.', 
+        mandatory: true 
+      }
     ],
     tips: [
-      'Document d\'État authentique signé par le juge du tribunal de votre lieu de naissance.',
-      'Paiement sécurisé Wave Business à l\'enregistrement du dossier.'
+      'Document d\'État authentique signé par le magistrat du tribunal territorialement compétent.',
+      'Reçu officiel de demande & de transaction émis immédiatement dès confirmation du paiement.',
+      'Retrait physique du document authentifié 3 jours (72h ouvrées) après la demande.'
+    ]
+  },
+  {
+    id: 'casier-judiciaire',
+    name: 'Casier Judiciaire (Extrait du Bulletin N°3)',
+    category: 'judiciaire',
+    officialCost: 3500,
+    courtFeeDescription: 'Timbres fiscaux officiels, greffe du tribunal et expédition certifiée inclus',
+    legalTurnaround: '72 heures ouvrées (3 jours)',
+    requiredDocuments: [
+      { 
+        name: '1. Extrait d\'acte de naissance ou copie intégrale du demandeur', 
+        description: 'Moins d\'un an ou extrait officiel conforme de votre lieu de naissance.', 
+        mandatory: true 
+      },
+      { 
+        name: '2. Photocopie de la CNI / Passeport / Attestation d\'identité', 
+        description: 'Scan ou photo nette recto/verso en cours de validité du demandeur.', 
+        mandatory: true 
+      },
+      { 
+        name: '3. Certificat de nationalité ivoirienne du demandeur ou parent', 
+        description: 'Preuve de la nationalité ivoirienne pour l\'enregistrement au casier central.', 
+        mandatory: true 
+      },
+      { 
+        name: '4. Une (1) photo d\'identité couleur récente', 
+        description: 'Format officiel sur fond blanc net pour la fiche de renseignement.', 
+        mandatory: true 
+      },
+      { 
+        name: '5. Justificatif de résidence & Précision du Tribunal', 
+        description: 'Lieu de résidence actuel et Tribunal de Première Instance de votre lieu de naissance.', 
+        mandatory: true 
+      }
+    ],
+    tips: [
+      'Indispensable pour tout dossier de candidature ou concours de la Fonction Publique.',
+      'Reçu officiel de dépôt transmis immédiatement dès confirmation du règlement.',
+      'Retrait physique du document original sous 72h ouvrées au greffe.'
     ]
   },
   {
@@ -82,12 +127,35 @@ const PROCEDURES_DATA: ProcedureDef[] = [
     courtFeeDescription: 'Pack complet combiné pour concours ou emploi (Économie de 500 F)',
     legalTurnaround: '72 heures ouvrées (3 jours)',
     requiredDocuments: [
-      { name: 'Extrait d\'Acte de Naissance', description: 'Copie ou scan propre', mandatory: true },
-      { name: 'CNI du demandeur', description: 'Recto-verso lisible', mandatory: true },
-      { name: 'CNI d\'un des parents', description: 'Pour l\'établissement de la nationalité', mandatory: true }
+      { 
+        name: '1. Extrait d\'acte de naissance ou copie intégrale du demandeur', 
+        description: 'Document original ou copie certifiée conforme (de préférence récent).', 
+        mandatory: true 
+      },
+      { 
+        name: '2. Photocopie de la CNI / Passeport / Attestation d\'identité', 
+        description: 'Pièce d\'identité officielle du demandeur recto-verso.', 
+        mandatory: true 
+      },
+      { 
+        name: '3. Certificat de nationalité du père OU de la mère', 
+        description: 'Ou CNI / acte de naissance du parent ivoirien.', 
+        mandatory: true 
+      },
+      { 
+        name: '4. Deux (2) photos d\'identité couleur récentes', 
+        description: 'Sur fond blanc net pour les 2 dossiers judiciaires.', 
+        mandatory: true 
+      },
+      { 
+        name: '5. Justificatif de résidence / domicile actuel', 
+        description: 'Attestation de domicile ou certificat de résidence dans votre commune.', 
+        mandatory: true 
+      }
     ],
     tips: [
-      'Formule la plus demandée par les candidats aux concours ENA, CAFOP, Police et INFAS.'
+      'Formule la plus demandée par les candidats aux concours ENA, CAFOP, Police et INFAS.',
+      'Économisez 500 F sur le traitement conjoint des 2 actes judiciaires.'
     ]
   },
   {
@@ -98,10 +166,11 @@ const PROCEDURES_DATA: ProcedureDef[] = [
     courtFeeDescription: 'Pack complet : CV format État, lettre de motivation sur mesure, conversion des scans aux normes du portail',
     legalTurnaround: '24h à 48h (Délai d\'urgence disponible)',
     requiredDocuments: [
-      { name: 'Scans des diplômes & attestations', description: 'Format PDF léger (< 500 Ko pour le portail)', mandatory: true },
-      { name: 'Photo d\'identité sur fond blanc', description: 'Recadrée aux normes officielles', mandatory: true },
-      { name: 'Certificat de visite médicale / Quittance', description: 'Scan du reçu d\'inscription en ligne', mandatory: true },
-      { name: 'Casier judiciaire & Nationalité', description: 'Documents à jour de moins de 3 mois', mandatory: true }
+      { name: '1. Extrait d\'acte de naissance + CNI du candidat', description: 'Scans HD conformes aux critères de la plateforme', mandatory: true },
+      { name: '2. Casier judiciaire & Certificat de nationalité', description: 'Moins de 3 mois pour le dépôt officiel', mandatory: true },
+      { name: '3. Diplômes & attestations de réussite', description: 'Format PDF léger compressé (< 500 Ko pour le portail)', mandatory: true },
+      { name: '4. Photo d\'identité sur fond blanc net', description: 'Recadrée aux dimensions et ratio officiels', mandatory: true },
+      { name: '5. Quittance / Fiche d\'inscription au concours', description: 'Scan du reçu de paiement des droits d\'inscription', mandatory: true }
     ],
     tips: [
       'OKBW optimise et compresse vos scans pour qu\'ils soient acceptés à 100% sur la plateforme officielle.',
@@ -304,46 +373,55 @@ export const AdministrativeSimulatorModal: React.FC<AdministrativeSimulatorModal
           </div>
 
           {/* Checklist of Required Documents */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                Pièces à fournir (Cochez pour préparer votre dossier) :
-              </span>
-              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+          <div className="p-5 rounded-2xl bg-orange-50/80 dark:bg-slate-800/90 border-2 border-orange-400 dark:border-orange-500/60 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-200 dark:border-slate-700 pb-3">
+              <div className="flex items-center space-x-2">
+                <FileCheck2 className="w-5 h-5 text-[#FF5E14]" />
+                <h5 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide font-['Outfit']">
+                  📋 5 Pièces à Fournir pour votre dossier :
+                </h5>
+              </div>
+              <span className="text-xs font-black px-3 py-1 rounded-full bg-[#FF5E14] text-white shadow-xs self-start sm:self-auto">
                 {checkedMandatoryCount}/{mandatoryCount} pièces prêtes
               </span>
             </div>
 
-            <div className="space-y-2">
+            <p className="text-xs text-slate-700 dark:text-slate-200 font-medium">
+              Cochez les pièces prêtes ou transmettez-les directement par WhatsApp / Messagerie instantanée :
+            </p>
+
+            <div className="space-y-2.5">
               {currentProc.requiredDocuments.map((doc, idx) => {
                 const checked = !!checkedDocs[doc.name];
                 return (
                   <div
                     key={idx}
                     onClick={() => toggleDoc(doc.name)}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start space-x-3 ${
+                    className={`p-3.5 rounded-2xl border-2 transition-all cursor-pointer flex items-start space-x-3.5 ${
                       checked
-                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700'
-                        : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:bg-slate-50'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-500 shadow-sm'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-500/50 shadow-xs'
                     }`}
                   >
-                    <div className="mt-0.5">
+                    <div className="mt-0.5 flex-shrink-0">
                       {checked ? (
                         <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       ) : (
-                        <Square className="w-5 h-5 text-slate-400" />
+                        <Square className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                       )}
                     </div>
                     <div className="flex-1 text-xs">
-                      <div className="flex items-center space-x-2">
-                        <strong className="text-slate-900 dark:text-white font-bold">{doc.name}</strong>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong className="text-slate-950 dark:text-white font-black text-xs sm:text-sm">
+                          {doc.name}
+                        </strong>
                         {doc.mandatory && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 font-bold">
-                            Obligatoire
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950/80 text-orange-800 dark:text-orange-300 font-extrabold border border-orange-300 dark:border-orange-800">
+                            Requis
                           </span>
                         )}
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed text-xs">
                         {doc.description}
                       </p>
                     </div>

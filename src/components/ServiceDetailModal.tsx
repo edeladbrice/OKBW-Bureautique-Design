@@ -300,25 +300,49 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{service.description}</p>
           </div>
 
-          {/* REQUIRED DOCUMENTS CHECKLIST (Highlighted for Nationalité, Casier, etc.) */}
+          {/* REQUIRED DOCUMENTS CHECKLIST (High Visibility for Nationalité, Casier, Actes) */}
           {service.requiredDocuments && service.requiredDocuments.length > 0 && (
-            <div className="p-5 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border-2 border-[#FF5E14]/40 dark:border-[#FF5E14]/50 text-slate-900 dark:text-slate-100 space-y-3 shadow-xs">
-              <div className="flex items-center space-x-2.5 text-sm font-extrabold text-[#FF5E14] dark:text-[#FF8800]">
-                <FileCheck2 className="w-5 h-5 flex-shrink-0" />
-                <span>📋 Pièces Justificatives à Transmettre</span>
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-orange-50 to-amber-50/50 dark:from-slate-900 dark:to-orange-950/30 border-2 border-[#FF5E14] text-slate-900 dark:text-slate-100 space-y-4 shadow-md">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-200 dark:border-orange-900/60 pb-3">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-[#FF5E14] text-white flex items-center justify-center shadow-sm">
+                    <FileCheck2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-950 dark:text-white uppercase tracking-tight font-['Outfit']">
+                      📋 {service.requiredDocuments.length} Pièces Justificatives Obligatoires
+                    </h3>
+                    <p className="text-xs text-orange-900 dark:text-orange-300 font-semibold">
+                      À préparer et transmettre pour la constitution du dossier
+                    </p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/80 text-orange-900 dark:text-orange-200 text-xs font-black border border-orange-300 dark:border-orange-700 self-start sm:self-auto">
+                  Dossier Officiel
+                </span>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
-                Pour engager la constitution officielle de votre dossier, préparez ces pièces (photos ou scans nets à joindre sur WhatsApp) :
-              </p>
-              <div className="space-y-2 pt-1">
+
+              <div className="space-y-2.5">
                 {service.requiredDocuments.map((doc, idx) => (
-                  <div key={idx} className="flex items-start space-x-2.5 p-2.5 rounded-xl bg-white dark:bg-slate-850 border border-orange-200/80 dark:border-orange-900/50 text-xs text-slate-800 dark:text-slate-200">
-                    <div className="w-5 h-5 rounded-full bg-orange-100 dark:bg-orange-900/60 text-[#FF5E14] dark:text-orange-300 font-bold flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
+                  <div 
+                    key={idx} 
+                    className="flex items-start space-x-3 p-3.5 rounded-2xl bg-white dark:bg-slate-800/90 border-2 border-orange-200 dark:border-slate-700 shadow-xs text-slate-900 dark:text-slate-100"
+                  >
+                    <div className="w-7 h-7 rounded-xl bg-[#FF5E14] text-white font-black flex items-center justify-center text-xs flex-shrink-0 shadow-xs">
                       {idx + 1}
                     </div>
-                    <span className="font-semibold">{doc}</span>
+                    <div className="flex-1 pt-0.5">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug block">
+                        {doc}
+                      </span>
+                    </div>
                   </div>
                 ))}
+              </div>
+
+              <div className="p-3 rounded-xl bg-orange-100/70 dark:bg-orange-950/70 border border-orange-200 dark:border-orange-800/50 flex items-center space-x-2 text-xs text-orange-950 dark:text-orange-200 font-bold">
+                <span>💡</span>
+                <span>Ces documents peuvent être transmis sous forme de photos nettes ou scans directement sur notre WhatsApp officiel ou notre messagerie instantanée.</span>
               </div>
             </div>
           )}
